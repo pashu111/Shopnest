@@ -96,8 +96,15 @@ const server = http.createServer((req, res) => {
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// ── Serve uploaded images ──
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// ── Serve uploaded images (with explicit CORS headers for cross-origin requests) ──
+app.use("/uploads", (req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+  next();
+}, express.static(path.join(process.cwd(), "uploads")));
 
 // ── Health ──
 app.get("/", (req, res) => res.status(200).send("API Running 🚀"));

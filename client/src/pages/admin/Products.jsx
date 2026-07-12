@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import productService from "../../services/productService";
-import { Plus, Search, Edit2, Trash2, ShoppingBasket, X, Save } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, ShoppingBasket, X, Save, Image as ImageIcon } from "lucide-react";
 import { toast } from "react-toastify";
 import { useWebSocket } from "../../context/WebSocketContext";
 import { resolveAssetUrl } from "../../utils/assetUrl";
@@ -259,37 +259,36 @@ const emptyProduct = {
               )}
               {filteredProducts.map((item) => {
                 const key = item._id || item.id;
-                const hasImage = Boolean(item.image) && !imageErrors[key];
-                if (!hasImage) {
-                  return null;
-                }
+                const showPlaceholder = !item.image || imageErrors[key];
                 return (
                   <tr key={`${item.category}-${key}`} className="hover:bg-gray-50/80 transition group">
                     <td className="px-6 py-4 flex items-center gap-3">
-                      <img
-                        src={resolveAssetUrl(item.image) || "https://placehold.co/100?text="}
-                        alt=""
-                        className="w-12 h-12 object-cover rounded-lg bg-gray-100 border border-gray-100"
-                        onError={() =>
-                          setImageErrors((prev) => ({
-                            ...prev,
-                            [key]: true,
-                          }))
-                        }
-                      />
-                      {hasImage && (
-                        <span className="font-semibold text-gray-900">{item.name}</span>
+                      {showPlaceholder ? (
+                        <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-100 flex items-center justify-center text-gray-400">
+                          <ImageIcon size={20} />
+                        </div>
+                      ) : (
+                        <img
+                          src={resolveAssetUrl(item.image)}
+                          alt=""
+                          className="w-12 h-12 object-cover rounded-lg bg-gray-100 border border-gray-100"
+                          onError={() =>
+                            setImageErrors((prev) => ({
+                              ...prev,
+                              [key]: true,
+                            }))
+                          }
+                        />
                       )}
+                      <span className="font-semibold text-gray-900">{item.name}</span>
                     </td>
                     <td className="px-6 py-4">
-                      {hasImage && (
-                        <span className="px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-md tracking-wider">
-                          {item.category}
-                        </span>
-                      )}
+                      <span className="px-2.5 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-md tracking-wider">
+                        {item.category}
+                      </span>
                     </td>
                     <td className="px-6 py-4 font-bold text-gray-900">
-                      {hasImage ? `₹${item.price}` : ""}
+                      ₹{item.price}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-1">

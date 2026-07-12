@@ -1,10 +1,30 @@
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import { Trash2, Heart } from "lucide-react";
+import { useState } from "react";
+import { Trash2, Heart, Image as ImageIcon } from "lucide-react";
 import { removeFromWishlist } from "../redux/slices/wishlistSlice";
 import { resolveAssetUrl } from "../utils/assetUrl";
 
 const getItemId = (item) => item.id ?? item._id;
+
+function WishlistImage({ item }) {
+  const [error, setError] = useState(false);
+  if (error || !item.image) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-slate-100 text-slate-400">
+        <ImageIcon size={32} />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={resolveAssetUrl(item.image)}
+      alt={item.name}
+      className="h-full w-full object-contain p-4"
+      onError={() => setError(true)}
+    />
+  );
+}
 
 const Wishlist = () => {
   const dispatch = useDispatch();
@@ -60,11 +80,7 @@ const Wishlist = () => {
                 className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
               >
                 <div className="relative overflow-hidden rounded-xl bg-slate-50 aspect-square">
-                  <img
-                    src={resolveAssetUrl(item.image)}
-                    alt={item.name}
-                    className="h-full w-full object-contain p-4"
-                  />
+                  <WishlistImage item={item} />
                 </div>
 
                 <div className="mt-4">

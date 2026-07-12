@@ -1,8 +1,11 @@
 import { motion, AnimatePresence } from "motion/react";
+import { useState } from "react";
 import { resolveAssetUrl } from "../utils/assetUrl";
-import { X } from "lucide-react";
+import { X, Image as ImageIcon } from "lucide-react";
 
 export default function QuickViewModal({ product, onClose }) {
+  const [imageError, setImageError] = useState(false);
+
   if (!product) return null;
 
   return (
@@ -29,12 +32,20 @@ export default function QuickViewModal({ product, onClose }) {
             <X size={16} />
           </button>
 
-          <div className="bg-slate-50">
-            <img
-              src={resolveAssetUrl(product.image)}
-              alt={product.name}
-              className="w-full h-56 object-contain p-6"
-            />
+          <div className="bg-slate-50 h-56 flex items-center justify-center p-6">
+            {imageError || !product.image ? (
+              <div className="text-center text-slate-400">
+                <ImageIcon size={48} className="mx-auto mb-2" />
+                <span className="text-xs">Image unavailable</span>
+              </div>
+            ) : (
+              <img
+                src={resolveAssetUrl(product.image)}
+                alt={product.name}
+                className="w-full h-full object-contain"
+                onError={() => setImageError(true)}
+              />
+            )}
           </div>
 
           <div className="p-5 space-y-3">

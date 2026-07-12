@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Minus, Plus, Sparkles, TicketPercent, Trash2 } from "lucide-react";
+import { CheckCircle2, Minus, Plus, Sparkles, TicketPercent, Trash2, Image as ImageIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   decreaseQuantity,
@@ -10,6 +10,25 @@ import {
 import { getUserOrders } from "../services/orderService";
 import { applyCoupon as applyCouponRedux, removeCoupon as removeCouponRedux } from "../redux/slices/couponSlice";
 import { resolveAssetUrl } from "../utils/assetUrl";
+
+function CartImage({ item }) {
+  const [error, setError] = useState(false);
+  if (error || !item.image) {
+    return (
+      <div className="w-20 h-20 sm:w-24 sm:h-24 flex items-center justify-center bg-slate-100 rounded-xl text-slate-400">
+        <ImageIcon size={28} />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={resolveAssetUrl(item.image)}
+      alt={item.name}
+      className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl"
+      onError={() => setError(true)}
+    />
+  );
+}
 
 export default function Cart() {
   const dispatch = useDispatch();
@@ -199,11 +218,7 @@ export default function Cart() {
                   className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm"
                 >
                   <div className="flex items-center gap-4">
-                    <img
-                      src={resolveAssetUrl(item.image)}
-                      alt={item.name}
-                      className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-xl"
-                    />
+                    <CartImage item={item} />
 
                     <div className="flex-1">
                       <h2 className="font-semibold text-lg text-slate-900">
