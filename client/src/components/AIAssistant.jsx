@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { MessageCircle, X, Send, Sparkles, ShoppingCart } from "lucide-react";
 import { useDispatch } from "react-redux";
-import { addToCart } from "../redux/slices/cartSlice";
+import { addToCartAsync } from "../redux/slices/cartSlice";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { resolveAssetUrl } from "../utils/assetUrl";
@@ -184,6 +184,7 @@ export default function AIAssistant() {
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [addingProductId, setAddingProductId] = useState(null);
   const messagesEndRef = useRef(null);
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -232,13 +233,32 @@ export default function AIAssistant() {
     }
   };
   
-  const handleAddToCart = (product) => {
+  const handleAddToCart = async (product) => {
     if (!user) {
-      toast.error("Please login to add items to cart");
+      toast.error("Please login to add items to your cart.");
       return;
     }
-    dispatch(addToCart(product));
-    toast.success(`Added ${product.name} to cart`);
+
+    const productId = product._id || product.id;
+    if (addingProductId === productId) return;
+
+    setAddingProductId(productId);
+
+    const result = await dispatch(addToCartAsync(product));
+
+    setAddingProductId(null);
+
+    if (result.meta.requestStatus === "fulfilled") {
+      toast.success("Product added to cart successfully.");
+    } else if (result.payload === "SESSION_EXPIRED") {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      dispatch({ type: "auth/logout" });
+      toast.error("Session expired. Please login again.");
+    } else {
+      const msg = typeof result.payload === "string" ? result.payload : "Failed to add to cart. Please try again.";
+      toast.error(msg);
+    }
   };
   
   const quickActions = [
@@ -324,7 +344,8 @@ export default function AIAssistant() {
                           </div>
                           <button
                             onClick={() => handleAddToCart(product)}
-                            className="bg-emerald-500 text-white p-1.5 rounded-full hover:bg-emerald-600 transition shrink-0"
+                            disabled={addingProductId === (product._id || product.id)}
+                            className="bg-emerald-500 text-white p-1.5 rounded-full hover:bg-emerald-600 disabled:bg-emerald-300 disabled:cursor-not-allowed transition shrink-0"
                             title="Add to cart"
                           >
                             <ShoppingCart size={14} />

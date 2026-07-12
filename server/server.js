@@ -9,7 +9,9 @@ import authRoutes from "./routes/authRoutes.js";
 import adminAuthRoutes from "./routes/adminAuth.js";
 import ProductRoutes from "./routes/productRoutes.js";
 import rewardRoutes from "./routes/rewardRoutes.js";
+import cartRoutes from "./routes/cartRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+
 import deliveryPartnerRoutes from "./routes/deliveryPartnerRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 
@@ -117,6 +119,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminAuthRoutes);
 app.use("/api/products", ProductRoutes);
 app.use("/api/rewards", rewardRoutes);
+app.use("/api/cart", cartRoutes);
+
 app.use("/api/orders", orderRoutes);
 app.use("/api/delivery", deliveryPartnerRoutes);
 app.use("/api/payments", paymentRoutes);

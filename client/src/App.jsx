@@ -41,6 +41,7 @@ import AdminDeliveryPartners from "./pages/admin/DeliveryPartners";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AIAssistant from "./components/AIAssistant";
+import { fetchCartAsync, clearCart } from "./redux/slices/cartSlice";
 
 // ⭐ Reward Imports
 import { setReward } from "./redux/slices/rewardSlice";
@@ -99,6 +100,15 @@ export default function App() {
 
     loadCoins();
 
+  }, [user, dispatch]);
+
+  // ⭐ FETCH CART FROM BACKEND WHEN USER LOGS IN / ON PAGE LOAD
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchCartAsync());
+    } else {
+      dispatch(clearCart());
+    }
   }, [user, dispatch]);
 
   useEffect(() => {

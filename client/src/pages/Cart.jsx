@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import {
   decreaseQuantity,
   increaseQuantity,
-  removeFromCart,
+  removeFromCartAsync,
 } from "../redux/slices/cartSlice";
 import { getUserOrders } from "../services/orderService";
 import { applyCoupon as applyCouponRedux, removeCoupon as removeCouponRedux } from "../redux/slices/couponSlice";
@@ -262,7 +262,7 @@ export default function Cart() {
                       <button
                         type="button"
                         onClick={() =>
-                          dispatch(removeFromCart(item._id || item.id))
+                          dispatch(removeFromCartAsync(item._id || item.id))
                         }
                         className="mt-2 inline-flex items-center gap-1 text-rose-600 text-sm font-semibold hover:underline"
                       >

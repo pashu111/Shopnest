@@ -33,14 +33,13 @@
 import express from "express";
 import { addProduct, getProducts, getProductById, getAllProducts, removeMissingImageProducts, removeAllProducts, updateProduct, deleteProduct } from "../controllers/productController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
-import { uploadProductImage, handleMulterError } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
 // ── Static routes (MUST be defined before parameterized /:id routes) ──
 
 // admin add product
-router.post("/add", authMiddleware, uploadProductImage, handleMulterError, addProduct);
+router.post("/add", authMiddleware, addProduct);
 
 // admin remove products missing images
 router.delete("/remove-missing-images", authMiddleware, removeMissingImageProducts);
@@ -57,7 +56,7 @@ router.get("/", getProducts);
 // ── Parameterized routes ──
 
 // admin update product
-router.put("/:id", authMiddleware, uploadProductImage, handleMulterError, updateProduct);
+router.put("/:id", authMiddleware, updateProduct);
 
 // admin delete product
 router.delete("/:id", authMiddleware, deleteProduct);

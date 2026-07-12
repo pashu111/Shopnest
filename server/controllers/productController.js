@@ -5,9 +5,6 @@ export const addProduct = async (req, res) => {
   try {
 
     const productData = { ...req.body };
-    if (req.file) {
-      productData.image = `/uploads/products/${req.file.filename}`;
-    }
     if (productData.price !== undefined) {
       productData.price = Number(productData.price);
     }
@@ -117,9 +114,6 @@ export const removeAllProducts = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const updateData = { ...req.body };
-    if (req.file) {
-      updateData.image = `/uploads/products/${req.file.filename}`;
-    }
     if (updateData.price !== undefined) {
       updateData.price = Number(updateData.price);
     }

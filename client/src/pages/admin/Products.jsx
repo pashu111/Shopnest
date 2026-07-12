@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import productService from "../../services/productService";
-import { Plus, Search, Edit2, Trash2, ShoppingBasket, X, Save, Image as ImageIcon } from "lucide-react";
+import { Plus, Search, Edit2, Trash2, ShoppingBasket, X, Save, Image as ImageIcon, Check } from "lucide-react";
 import { toast } from "react-toastify";
 import { useWebSocket } from "../../context/WebSocketContext";
 import { resolveAssetUrl } from "../../utils/assetUrl";
+import { getAvailableProductImages, getProductImageUrl } from "../../utils/productImage";
 
 const DEFAULT_CATEGORIES = [
   "fruits",
@@ -23,6 +24,78 @@ const DEFAULT_CATEGORIES = [
 const normalizeCategory = (category) =>
   (category || "general").trim().toLowerCase();
 
+const productImages = getAvailableProductImages();
+
+function ProductImageSelector({ value, onChange }) {
+  const selectedFilename = value || "";
+
+  return (
+    <div>
+      <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">
+        Product Image
+      </label>
+
+      <div className="space-y-3">
+        {/* Selected Image Preview */}
+        {selectedFilename && (
+          <div className="relative h-32 w-full rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+            <img
+              src={getProductImageUrl(selectedFilename)}
+              alt="Selected"
+              className="h-full w-full object-contain"
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent p-2">
+              <p className="text-xs text-white font-medium truncate">{selectedFilename}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Image Grid Selector */}
+        <div>
+          <p className="text-xs text-gray-500 mb-2 font-medium">
+            {productImages.length > 0
+              ? "Select an image from the list below:"
+              : "No images found. Add image files to src/assets/products/"}
+          </p>
+          {productImages.length > 0 && (
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 max-h-52 overflow-y-auto p-1">
+              {productImages.map(({ filename, url }) => {
+                const isSelected = selectedFilename === filename;
+                return (
+                  <button
+                    key={filename}
+                    type="button"
+                    onClick={() => onChange(filename)}
+                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      isSelected
+                        ? "border-red-500 ring-2 ring-red-200 shadow-md"
+                        : "border-gray-200 hover:border-red-300 hover:shadow-sm"
+                    }`}
+                    title={filename}
+                  >
+                    <img
+                      src={url}
+                      alt={filename}
+                      className="h-full w-full object-cover"
+                    />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-red-500/10 flex items-center justify-center">
+                        <div className="bg-red-500 text-white p-1 rounded-full">
+                          <Check size={14} />
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const AdminProducts = () => {
   const [inventory, setInventory] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,9 +105,6 @@ const AdminProducts = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [imageErrors, setImageErrors] = useState({});
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const fileInputRef = useRef(null);
 
   // Default state for a new product
 const emptyProduct = {
@@ -102,29 +172,16 @@ const emptyProduct = {
     }
   }, [lastMessage, wsStatus]);
 
-  // Cleanup object URL to avoid memory leaks
-  useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
-
   // --- 2. ACTIONS ---
   const openAddModal = () => {
     setIsEditing(false);
     setCurrentProduct(emptyProduct);
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
     setIsModalOpen(true);
   };
 
   const openEditModal = (product) => {
     setIsEditing(true);
     setCurrentProduct({ ...product, id: product._id || product.id });
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
     setIsModalOpen(true);
   };
 
@@ -145,18 +202,14 @@ const emptyProduct = {
   const handleSaveProduct = async (e) => {
     e.preventDefault();
 
-    const formData = new FormData();
-    formData.append("name", currentProduct.name);
-    formData.append("price", parseFloat(currentProduct.price) || 0);
-    formData.append("category", normalizeCategory(currentProduct.category));
-    formData.append("description", currentProduct.description || "");
-    formData.append("stock", currentProduct.stock ?? 0);
-
-    if (selectedFile) {
-      formData.append("image", selectedFile);
-    } else if (currentProduct.image && !currentProduct.image.startsWith("data:")) {
-      formData.append("image", currentProduct.image);
-    }
+    const productData = {
+      name: currentProduct.name,
+      price: parseFloat(currentProduct.price) || 0,
+      category: normalizeCategory(currentProduct.category),
+      description: currentProduct.description || "",
+      stock: currentProduct.stock ?? 0,
+      image: currentProduct.image || "",
+    };
 
     if (isEditing) {
       const id = currentProduct.id || currentProduct._id;
@@ -165,7 +218,7 @@ const emptyProduct = {
         return;
       }
       try {
-        const updated = await productService.updateProduct(id, formData);
+        const updated = await productService.updateProduct(id, productData);
         setInventory((prev) =>
           prev.map((item) =>
             (item._id || item.id) === id ? updated : item
@@ -178,7 +231,7 @@ const emptyProduct = {
       }
     } else {
       try {
-        const created = await productService.addProduct(formData);
+        const created = await productService.addProduct(productData);
         setInventory((prev) => [created, ...prev]);
         toast.success("New product added!");
       } catch {
@@ -187,8 +240,6 @@ const emptyProduct = {
       }
     }
 
-    setSelectedFile(null);
-    setPreviewUrl(null);
     setIsModalOpen(false);
   };
 
@@ -368,82 +419,10 @@ const emptyProduct = {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">
-                  Product Image
-                </label>
-
-                <div className="space-y-3">
-                  {/* Image Preview / Upload Box */}
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="relative h-40 w-full border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-red-400 hover:bg-red-50/30 transition-all overflow-hidden bg-gray-50"
-                  >
-                    {previewUrl ? (
-                      <>
-                        <img
-                          src={previewUrl}
-                          alt="Preview"
-                          className="h-full w-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <p className="text-white text-xs font-bold">Change Image</p>
-                        </div>
-                      </>
-                    ) : currentProduct.image ? (
-                      <>
-                        <img
-                          src={resolveAssetUrl(currentProduct.image)}
-                          alt="Preview"
-                          className="h-full w-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                          <p className="text-white text-xs font-bold">Change Image</p>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="p-3 bg-white rounded-full text-gray-400 shadow-sm">
-                          <Plus size={24} />
-                        </div>
-                        <p className="text-xs text-gray-400 font-medium">Click to upload from computer</p>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Hidden File Input */}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file) {
-                        if (file.size > 5 * 1024 * 1024) {
-                          toast.error("Image must be under 5MB");
-                          return;
-                        }
-                        setSelectedFile(file);
-                        setPreviewUrl(URL.createObjectURL(file));
-                      }
-                    }}
-                  />
-
-                  {/* Manual URL Input (Optional fallback for external images) */}
-                  {!selectedFile && (
-                    <div className="relative">
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-red-500 outline-none bg-white"
-                        placeholder="Or paste image URL (external images only)..."
-                        value={currentProduct.image?.startsWith("/uploads") ? "" : (currentProduct.image || "")}
-                        onChange={(e) => setCurrentProduct({ ...currentProduct, image: e.target.value })}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
+              <ProductImageSelector
+                value={currentProduct.image}
+                onChange={(filename) => setCurrentProduct({ ...currentProduct, image: filename })}
+              />
 
               <button
                 type="submit"

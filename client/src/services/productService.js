@@ -21,10 +21,8 @@ const getAllProducts = async () => {
   return res.data;
 };
 
-const addProduct = async (formData) => {
-  const res = await API.post("/products/add", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+const addProduct = async (productData) => {
+  const res = await API.post("/products/add", productData);
   return res.data;
 };
 
@@ -38,10 +36,8 @@ const removeAllProducts = async () => {
   return res.data;
 };
 
-const updateProduct = async (id, formData) => {
-  const res = await API.put(`/products/${id}`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+const updateProduct = async (id, productData) => {
+  const res = await API.put(`/products/${id}`, productData);
   return res.data;
 };
 

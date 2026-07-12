@@ -92,6 +92,23 @@ API.interceptors.request.use((req) => {
 API.interceptors.response.use(
   (res) => res,
   (error) => {
+    if (error.response?.status === 401) {
+      const url = error.config?.url || "";
+      const isAuthRoute =
+        url.startsWith("/auth/login") ||
+        url.startsWith("/auth/register") ||
+        url.startsWith("/admin/login") ||
+        url.startsWith("/delivery/login");
+      if (!isAuthRoute) {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        delete API.defaults.headers.common.Authorization;
+        if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+          window.location.href = "/login";
+        }
+      }
+    }
+
     if (error.code === "ERR_NETWORK" || error.message === "Network Error") {
       console.error(
         "[api] Network error — likely CORS or backend unreachable. Check:",

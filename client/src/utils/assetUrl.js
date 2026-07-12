@@ -1,3 +1,5 @@
+import { getProductImageUrl, isLocalProductFilename } from "./productImage";
+
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "::1"]);
 
 const getBackendBaseUrl = () => {
@@ -18,6 +20,10 @@ export const resolveAssetUrl = (value) => {
 
   if (trimmed.startsWith("//")) {
     return trimmed;
+  }
+
+  if (isLocalProductFilename(trimmed)) {
+    return getProductImageUrl(trimmed);
   }
 
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {

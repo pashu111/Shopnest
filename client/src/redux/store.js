@@ -90,7 +90,7 @@ export const store = configureStore({
 
   },
   preloadedState: {
-    cart: { items: loadCartFromStorage() },
+    cart: { items: loadCartFromStorage(), loading: false, error: null, _fetcher: 0 },
   },
 });
 

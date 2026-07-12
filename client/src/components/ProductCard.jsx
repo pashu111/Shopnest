@@ -1,16 +1,15 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
 import {
-  addToCart,
+  addToCartAsync,
   increaseQuantity,
   decreaseQuantity,
 } from "../redux/slices/cartSlice";
 import { toast } from "react-toastify";
-import { ShoppingCart, Plus, Minus, Star, Image as ImageIcon } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Star, Image as ImageIcon, Loader } from "lucide-react";
 import WishlistButton from "./WishlistButton";
 import { resolveAssetUrl } from "../utils/assetUrl";
 
-// ProductImage component with error handling for better mobile support
 function ProductImage({ product }) {
   const [imageError, setImageError] = useState(false);
   const imageUrl = resolveAssetUrl(product.image);
@@ -39,28 +38,49 @@ function ProductImage({ product }) {
 
 export default function ProductCard({ product }) {
   const dispatch = useDispatch();
+  const [addingProductId, setAddingProductId] = useState(null);
   const { user } = useSelector((state) => state.auth);
-  const cartItems = useSelector((state) => state.cart.items);
+  const { items: cartItems } = useSelector((state) => state.cart);
+  const productId = product._id || product.id;
   const existingItem = cartItems.find(
-    (item) => (item._id || item.id) === (product._id || product.id)
+    (item) => (item._id || item.id) === productId
   );
+  const isAddingThis = addingProductId === productId;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!user) {
-      toast.error("Please login to add items to cart");
+      toast.error("Please login to add items to your cart.");
       return;
     }
-    dispatch(addToCart(product));
-    toast.success(`Added ${product.name}`);
+
+    if (isAddingThis) return;
+
+    setAddingProductId(productId);
+
+    const result = await dispatch(addToCartAsync(product));
+
+    setAddingProductId(null);
+
+    if (result.meta.requestStatus === "fulfilled") {
+      toast.success("Product added to cart successfully.");
+    } else if (result.payload === "SESSION_EXPIRED") {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      dispatch({ type: "auth/logout" });
+      toast.error("Session expired. Please login again.");
+    } else {
+      const msg = typeof result.payload === "string" ? result.payload : "Failed to add to cart. Please try again.";
+      toast.error(msg);
+    }
   };
 
   const handleIncrease = () => {
-    dispatch(increaseQuantity(product._id || product.id));
+    dispatch(increaseQuantity(productId));
     toast.info(`Increased ${product.name} quantity`);
   };
 
   const handleDecrease = () => {
-    dispatch(decreaseQuantity(product._id || product.id));
+    dispatch(decreaseQuantity(productId));
     toast.warn(`Decreased ${product.name} quantity`);
   };
 
@@ -131,9 +151,15 @@ export default function ProductCard({ product }) {
         ) : (
           <button
             onClick={handleAdd}
-            className="mt-3 w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-full text-sm font-semibold transition-all"
+            disabled={isAddingThis}
+            className="mt-3 w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white py-2.5 rounded-full text-sm font-semibold transition-all"
           >
-            <ShoppingCart size={16} /> Add to Cart
+            {isAddingThis ? (
+              <Loader size={16} className="animate-spin" />
+            ) : (
+              <ShoppingCart size={16} />
+            )}
+            {isAddingThis ? "Adding..." : "Add to Cart"}
           </button>
         )}
       </div>
