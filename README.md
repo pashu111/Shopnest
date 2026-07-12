@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🛍️ ShopNest
 
 ShopNest is a full-stack e-commerce web application that provides a modern online shopping experience. It includes secure authentication, product management, shopping cart, order processing, and role-based access for administrators and customers.
@@ -167,3 +168,6 @@ This project is licensed under the MIT License.
 
 - GitHub: https://github.com/your-username
 - LinkedIn: https://linkedin.com/in/your-profile
+=======
+# Shopnest
+>>>>>>> a89c02330dca5a9f97216241bf3093632c1e1f49
