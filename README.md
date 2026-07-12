@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🛍️ ShopNest
 
 ShopNest is a full-stack e-commerce web application that provides a modern online shopping experience. It includes secure authentication, product management, shopping cart, order processing, and role-based access for administrators and customers.
@@ -111,6 +110,8 @@ Add screenshots of:
 - Admin Dashboard
 
 ## 🌐 Deployment
+
+live link: https://shopnest-weld-psi.vercel.app/
 
 Frontend:
 - Vercel
