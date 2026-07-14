@@ -54,6 +54,11 @@ export const createOrder = async (data, tokenOverride) => {
   return res.data;
 };
 
+export const createGuestOrder = async (data) => {
+  const res = await API.post("/orders/guest/create", data);
+  return res.data;
+};
+
 export const getUserOrders = async (tokenOverride) => {
   const res = await API.get("/orders/my-orders", authConfig(tokenOverride));
   return res.data;

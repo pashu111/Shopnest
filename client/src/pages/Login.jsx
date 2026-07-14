@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser, clearError } from "../redux/slices/authSlice";
 import { Link, useNavigate } from "react-router-dom";
+import { mergeGuestDataAPI } from "../services/authService";
 
 const GMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 const MOBILE_REGEX = /^[0-9]{10}$/;
@@ -66,6 +67,10 @@ export default function Login() {
     if (!isClientValid) return;
     dispatch(loginUser({ identifier, password, isAdmin: false })).then((res) => {
       if (res.meta.requestStatus === "fulfilled") {
+        const userEmail = res.payload?.email;
+        if (userEmail) {
+          mergeGuestDataAPI(userEmail).catch(() => {});
+        }
         navigate("/home");
       }
     });

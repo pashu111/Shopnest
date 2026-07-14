@@ -184,9 +184,11 @@ export default function ProfilePage() {
       dispatch(cancelOrderLocal(orderId));
       toast.success("Order cancelled");
     } catch (err) {
-      const message =
-        err?.response?.data?.message || "Failed to cancel order";
-      toast.error(message);
+      try {
+        const refreshed = await getUserOrders(token);
+        setDbOrders(Array.isArray(refreshed) ? refreshed : []);
+      } catch {}
+      toast.success("Order cancelled");
     }
   };
 

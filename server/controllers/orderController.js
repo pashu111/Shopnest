@@ -1,6 +1,8 @@
 import Order from "../models/Order.js";
+import User from "../models/User.js";
 import DeliveryPartner from "../models/DeliveryPartner.js";
 import { clearUserCartData } from "../utils/cartCleanup.js";
+import { sendOrderConfirmation } from "../utils/emailService.js";
 import {
   NEARBY_ORDER_TTL_MINUTES,
   assignNearestDeliveryPartnerOffer,
@@ -112,6 +114,8 @@ export const createOrder = async (req, res) => {
       totalAmount,
       deliveryCharges: deliveryCharges || 0,
       paymentMethod,
+      isPaid: false,
+      status: "Confirmed",
       customerName,
       customerPhone,
       deliveryAddress: normalizedDeliveryAddress,
@@ -141,10 +145,108 @@ export const createOrder = async (req, res) => {
       }
     }
 
+    const customerEmail = req.body.customerEmail || (await User.findById(req.user.id).select("email"))?.email;
+    if (customerEmail) {
+      sendOrderConfirmation({
+        email: customerEmail,
+        name: order.customerName || "Customer",
+        orderId: order.orderId || order._id,
+        items: order.products || [],
+        total: order.totalAmount || 0,
+        deliveryAddress: order.deliveryAddress || "",
+        paymentMethod: order.paymentMethod || "",
+      });
+    }
+
     res.json(order);
   } catch (error) {
     console.error("Create order error:", error);
     res.status(500).json({ message: error.message || "Order save failed" });
+  }
+};
+
+export const createGuestOrder = async (req, res) => {
+  try {
+    const {
+      products,
+      totalAmount,
+      deliveryCharges,
+      paymentMethod,
+      customerName,
+      customerPhone,
+      customerEmail,
+      deliveryAddress,
+      address,
+      deliveryLocation,
+    } = req.body;
+
+    if (!customerEmail) {
+      return res.status(400).json({ message: "Email is required for guest checkout" });
+    }
+
+    const normalizedDeliveryLocation = normalizeDeliveryLocation({
+      deliveryLocation,
+      deliveryAddress,
+      address,
+    });
+    const locationError = validateDeliveryLocation(normalizedDeliveryLocation);
+    if (locationError) {
+      return res.status(400).json({ message: locationError });
+    }
+    const normalizedDeliveryAddress = normalizedDeliveryLocation.fullAddress;
+
+    const order = new Order({
+      user: null,
+      guestEmail: customerEmail,
+      guestName: customerName || "",
+      guestPhone: customerPhone || "",
+      products,
+      totalAmount,
+      deliveryCharges: deliveryCharges || 0,
+      paymentMethod,
+      isPaid: false,
+      status: "Confirmed",
+      customerName,
+      customerPhone,
+      deliveryAddress: normalizedDeliveryAddress,
+      deliveryLocation: normalizedDeliveryLocation,
+      address: normalizedDeliveryAddress,
+      nearbyOfferExpiresAt: new Date(Date.now() + NEARBY_ORDER_TTL_MINUTES * 60 * 1000),
+    });
+
+    await order.save();
+
+    const publish = req.app.get("wsPublish");
+    if (typeof publish === "function") {
+      try {
+        const populatedOrder = await Order.findById(order._id);
+        publish("admin:orders", {
+          type: "new_order",
+          order: stripDeliveryOtpFields(populatedOrder),
+          timestamp: new Date().toISOString()
+        });
+        await publishNearbyOrderToEligiblePartners(req.app, order._id);
+      } catch (wsError) {
+        console.warn("WebSocket publish failed for guest order:", wsError);
+      }
+    }
+
+    if (customerEmail) {
+      sendOrderConfirmation({
+        email: customerEmail,
+        name: order.customerName || "Customer",
+        orderId: order.orderId || order._id,
+        items: order.products || [],
+        total: order.totalAmount || 0,
+        deliveryAddress: order.deliveryAddress || "",
+        paymentMethod: order.paymentMethod || "",
+      });
+    }
+
+    res.status(201).json(order);
+  } catch (error) {
+    console.error("Create guest order error:", error);
+    res.status(500).json({ message: error.message || "Guest order save failed" });
   }
 };
 
@@ -324,10 +426,14 @@ export const cancelOrder = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const order = await Order.findOne({
-      _id: id,
-      user: req.user.id,
-    });
+    const query = { user: req.user.id };
+    if (/^\d{8}$/.test(id)) {
+      query.orderId = id;
+    } else {
+      query._id = id;
+    }
+
+    const order = await Order.findOne(query);
 
     if (!order) {
       return res.status(404).json({ message: "Order not found" });

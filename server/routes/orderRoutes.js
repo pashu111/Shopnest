@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createOrder,
+  createGuestOrder,
   getUserOrders,
   getOrderById,
   cancelOrder,
@@ -99,6 +100,9 @@ router.patch(
   deliveryPartnerAuthMiddleware,
   verifyDeliveryOtp
 );
+
+// guest order route (no auth required)
+router.post("/guest/create", createGuestOrder);
 
 // user routes
 // Keep parameterized routes last so paths like /delivery/nearby-orders

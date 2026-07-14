@@ -1,15 +1,14 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { generateReward, getRewardCoins } from "../services/rewardService";
-import { setReward } from "../redux/slices/rewardSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { clearCart } from "../redux/slices/cartSlice";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Package } from "lucide-react";
 
 export default function OrderSuccess() {
   const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
+  const location = useLocation();
+  const orderId = location.state?.orderId;
 
   useEffect(() => {
     dispatch(clearCart());
@@ -18,26 +17,8 @@ export default function OrderSuccess() {
       localStorage.removeItem("cart");
       sessionStorage.removeItem("cartItems");
       sessionStorage.removeItem("cart");
-    } catch {
-      // Ignore storage failures; Redux state is already cleared.
-    }
-
-    const handleReward = async () => {
-      try {
-        const token = user?.token || null;
-        const isJwt = typeof token === "string" && token.split(".").length === 3;
-        if (!isJwt) return;
-
-        const data = await getRewardCoins(token);
-        if (data && typeof data.coins === "number") {
-          dispatch(setReward(data.coins));
-        }
-      } catch (err) {
-        console.error("Failed to fetch reward coins:", err);
-      }
-    };
-    handleReward();
-  }, [dispatch, user?.token]);
+    } catch {}
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f7f5f2] px-4">
@@ -51,7 +32,15 @@ export default function OrderSuccess() {
           <CheckCircle2 size={32} className="text-emerald-600" />
         </div>
         <h1 className="text-3xl font-extrabold text-slate-900">Order Successful!</h1>
-        <p className="text-slate-600 mt-2">Your rewards have been updated.</p>
+        <p className="text-slate-500 mt-2 text-sm">Thank you for your purchase.</p>
+
+        {orderId && (
+          <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-200 px-4 py-2.5">
+            <Package size={16} className="text-slate-500" />
+            <span className="text-sm font-semibold text-slate-700">Order ID: #{orderId}</span>
+          </div>
+        )}
+
         <Link
           to="/home"
           className="mt-6 inline-flex rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white hover:bg-emerald-700 transition shadow-lg shadow-emerald-200/50"

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { addToCartAPI, getCartAPI, updateCartItemAPI, removeFromCartAPI } from "../../services/cartService";
+import { addToCartAPI, getCartAPI, updateCartItemAPI, removeFromCartAPI, mergeCartAPI } from "../../services/cartService";
 
 let _cartFetcher = 0;
 
@@ -62,6 +62,19 @@ export const updateCartItemAsync = createAsyncThunk(
       return { items: normalizeBackendCart(res.data), fetcher };
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to update cart");
+    }
+  }
+);
+
+export const mergeCartAsync = createAsyncThunk(
+  "cart/mergeCartAsync",
+  async (localItems, { rejectWithValue }) => {
+    const fetcher = ++_cartFetcher;
+    try {
+      const res = await mergeCartAPI(localItems);
+      return { items: normalizeBackendCart(res.data), fetcher };
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to merge cart");
     }
   }
 );
@@ -179,6 +192,21 @@ const cartSlice = createSlice({
         }
       })
       .addCase(removeFromCartAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(mergeCartAsync.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(mergeCartAsync.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload.fetcher >= state._fetcher) {
+          state.items = action.payload.items;
+          state._fetcher = action.payload.fetcher;
+        }
+      })
+      .addCase(mergeCartAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

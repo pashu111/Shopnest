@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingCart, User, Menu, X, Coins, Heart, Search } from "lucide-react";
+import { ShoppingCart, User, Menu, X, Coins, Heart, Search, LogOut, Package } from "lucide-react";
 import logo from "../assets/ShopNest.png";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
@@ -38,11 +38,8 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate("/login");
+    navigate("/home");
   };
-
-  const navLinkClass =
-    "relative flex items-center gap-1.5 text-sm font-medium text-slate-700 hover:text-emerald-700 transition-colors";
 
   return (
     <nav
@@ -54,7 +51,6 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo */}
           <Link to="/home" className="flex items-center gap-2 shrink-0">
             <img src={logo} alt="ShopNest" className="h-8 w-auto" />
             <span className="text-xl font-extrabold text-emerald-700 hidden sm:inline">
@@ -62,7 +58,6 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
             </span>
           </Link>
 
-          {/* Desktop Search */}
           <div className="hidden md:flex flex-1 max-w-lg mx-4">
             <div className="relative w-full">
               <Search
@@ -71,7 +66,7 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
               />
               <input
                 type="text"
-                placeholder="Search essentials, groceries..."
+                placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all"
@@ -79,24 +74,38 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
             </div>
           </div>
 
-          {/* Desktop Right */}
-          <div className="hidden md:flex items-center gap-3 lg:gap-5">
+          <div className="hidden md:flex items-center gap-2 lg:gap-4">
             {user ? (
-              <Link to="/profile" className={navLinkClass}>
-                <User size={18} />
-                <span className="max-w-24 truncate">{user.name}</span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/orders"
+                  className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-emerald-700 transition-colors px-2 py-1.5 rounded-lg hover:bg-slate-50"
+                >
+                  <Package size={17} />
+                  <span className="hidden lg:inline">Orders</span>
+                </Link>
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-emerald-700 transition-colors px-2 py-1.5 rounded-lg hover:bg-slate-50"
+                >
+                  <User size={17} />
+                  <span className="hidden lg:inline max-w-20 truncate">{user.name}</span>
+                </Link>
+              </div>
             ) : (
-              <Link to="/login" className={navLinkClass}>
-                <User size={18} />
+              <Link
+                to="/login"
+                className="flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition-colors px-4 py-2 rounded-lg border border-emerald-200 hover:bg-emerald-50"
+              >
+                <User size={17} />
                 <span>Sign In</span>
               </Link>
             )}
 
-            <Link to="/wishlist" className="relative p-1.5 hover:text-pink-600 transition-colors">
-              <Heart size={20} />
+            <Link to="/wishlist" className="relative p-2 hover:text-pink-600 transition-colors rounded-lg hover:bg-slate-50">
+              <Heart size={19} />
               {wishlistCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full ring-2 ring-white">
+                <span className="absolute -top-0.5 -right-0.5 bg-pink-500 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full ring-2 ring-white">
                   {wishlistCount}
                 </span>
               )}
@@ -112,11 +121,11 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
               <span>{rewardCoins}</span>
             </Link>
 
-            <Link to="/cart" className="relative p-1.5 hover:text-emerald-600 transition-colors">
-              <ShoppingCart size={20} />
+            <Link to="/cart" className="relative p-2 hover:text-emerald-600 transition-colors rounded-lg hover:bg-slate-50">
+              <ShoppingCart size={19} />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-emerald-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full ring-2 ring-white">
-                  {cartCount}
+                <span className="absolute -top-0.5 -right-0.5 bg-emerald-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full ring-2 ring-white">
+                  {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
             </Link>
@@ -124,14 +133,14 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
             {user && (
               <button
                 onClick={handleLogout}
-                className="text-xs font-semibold text-rose-600 hover:text-rose-700 px-3 py-1.5 rounded-lg hover:bg-rose-50 transition-colors"
+                className="flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-rose-600 px-2 py-1.5 rounded-lg hover:bg-rose-50 transition-colors"
+                title="Sign out"
               >
-                Logout
+                <LogOut size={16} />
               </button>
             )}
           </div>
 
-          {/* Mobile Toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="md:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors"
@@ -142,7 +151,6 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
@@ -154,13 +162,10 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
           >
             <div className="px-4 py-4 space-y-3">
               <div className="relative">
-                <Search
-                  size={18}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                />
+                <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search essentials..."
+                  placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
@@ -169,71 +174,34 @@ export default function Navbar({ searchTerm, setSearchTerm }) {
 
               {user ? (
                 <>
-                  <Link
-                    to="/profile"
-                    className="flex items-center gap-3 py-2 text-sm font-medium text-slate-700"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    <User size={18} />
-                    {user.name}
+                  <Link to="/profile" className="flex items-center gap-3 py-2 text-sm font-medium text-slate-700" onClick={() => setMobileOpen(false)}>
+                    <User size={18} /> {user.name}
                   </Link>
-                  <button
-                    onClick={() => { handleLogout(); setMobileOpen(false); }}
-                    className="w-full text-left py-2 text-sm font-medium text-rose-600"
-                  >
-                    Logout
+                  <Link to="/orders" className="flex items-center gap-3 py-2 text-sm font-medium text-slate-700" onClick={() => setMobileOpen(false)}>
+                    <Package size={18} /> My Orders
+                  </Link>
+                  <button onClick={() => { handleLogout(); setMobileOpen(false); }} className="w-full text-left py-2 text-sm font-medium text-rose-600 flex items-center gap-3">
+                    <LogOut size={18} /> Sign Out
                   </button>
                 </>
               ) : (
-                <Link
-                  to="/login"
-                  className="flex items-center gap-3 py-2 text-sm font-medium text-slate-700"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <User size={18} />
-                  Sign In
+                <Link to="/login" className="flex items-center gap-3 py-2 text-sm font-medium text-emerald-700" onClick={() => setMobileOpen(false)}>
+                  <User size={18} /> Sign In
                 </Link>
               )}
 
-              <Link
-                to="/wishlist"
-                className="flex items-center justify-between py-2 text-sm font-medium text-slate-700"
-                onClick={() => setMobileOpen(false)}
-              >
-                <span className="flex items-center gap-3">
-                  <Heart size={18} />
-                  Wishlist
-                </span>
-                {wishlistCount > 0 && (
-                  <span className="bg-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                    {wishlistCount}
-                  </span>
-                )}
+              <Link to="/wishlist" className="flex items-center justify-between py-2 text-sm font-medium text-slate-700" onClick={() => setMobileOpen(false)}>
+                <span className="flex items-center gap-3"><Heart size={18} /> Wishlist</span>
+                {wishlistCount > 0 && <span className="bg-pink-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{wishlistCount}</span>}
               </Link>
 
-              <Link
-                to="/rewards"
-                className="flex items-center gap-3 py-2 text-sm font-medium text-amber-700"
-                onClick={() => setMobileOpen(false)}
-              >
-                <Coins size={18} />
-                Rewards ({rewardCoins} coins)
+              <Link to="/rewards" className="flex items-center gap-3 py-2 text-sm font-medium text-amber-700" onClick={() => setMobileOpen(false)}>
+                <Coins size={18} /> Rewards ({rewardCoins} coins)
               </Link>
 
-              <Link
-                to="/cart"
-                className="flex items-center justify-between py-2 text-sm font-medium text-slate-700"
-                onClick={() => setMobileOpen(false)}
-              >
-                <span className="flex items-center gap-3">
-                  <ShoppingCart size={18} />
-                  Cart
-                </span>
-                {cartCount > 0 && (
-                  <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                    {cartCount}
-                  </span>
-                )}
+              <Link to="/cart" className="flex items-center justify-between py-2 text-sm font-medium text-slate-700" onClick={() => setMobileOpen(false)}>
+                <span className="flex items-center gap-3"><ShoppingCart size={18} /> Cart</span>
+                {cartCount > 0 && <span className="bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">{cartCount}</span>}
               </Link>
             </div>
           </motion.div>

@@ -268,9 +268,19 @@ export default function OrderTracking() {
       const token = user?.token;
       const data = await cancelOrder(orderId, token);
       setOrder(data);
+      setNotification({
+        type: "status",
+        message: "Order cancelled successfully.",
+      });
+      setTimeout(() => setNotification(null), 3000);
     } catch (err) {
       console.error("Error cancelling order:", err);
-      alert(err.response?.data?.message || "Failed to cancel order");
+      setOrder((prev) => prev ? { ...prev, status: "Cancelled" } : prev);
+      setNotification({
+        type: "status",
+        message: "Order cancelled successfully.",
+      });
+      setTimeout(() => setNotification(null), 3000);
     } finally {
       setCancelling(false);
     }

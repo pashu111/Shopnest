@@ -14,3 +14,6 @@ export const removeFromCartAPI = (productId) =>
 
 export const clearCartAPI = () =>
   API.delete("/cart");
+
+export const mergeCartAPI = (items) =>
+  API.post("/cart/merge", { items });

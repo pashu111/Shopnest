@@ -90,9 +90,6 @@ export const verifyRazorpayAndCreateOrder = async (req, res) => {
   try {
     const { keySecret } = requireRazorpayConfig();
     const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
 
     const {
       razorpay_order_id,
@@ -118,25 +115,13 @@ export const verifyRazorpayAndCreateOrder = async (req, res) => {
       return res.status(400).json({ message: "Payment signature verification failed" });
     }
 
-    const existingOrder = await Order.findOne({
-      user: userId,
-      $or: [
-        { "paymentResult.razorpayPaymentId": paymentId },
-        { "paymentResult.razorpayOrderId": orderId },
-      ],
-    });
-
-    if (existingOrder) {
-      await clearUserCartData(userId);
-      return res.json(existingOrder);
-    }
-
     const {
       products,
       totalAmount,
       deliveryCharges,
       customerName,
       customerPhone,
+      customerEmail,
       deliveryAddress,
       address,
       deliveryLocation,
@@ -162,12 +147,31 @@ export const verifyRazorpayAndCreateOrder = async (req, res) => {
     }
     const normalizedDeliveryAddress = normalizedDeliveryLocation.fullAddress;
 
+    if (userId) {
+      const existingOrder = await Order.findOne({
+        user: userId,
+        $or: [
+          { "paymentResult.razorpayPaymentId": paymentId },
+          { "paymentResult.razorpayOrderId": orderId },
+        ],
+      });
+
+      if (existingOrder) {
+        await clearUserCartData(userId);
+        return res.json(existingOrder);
+      }
+    }
+
     const order = new Order({
-      user: userId,
+      user: userId || null,
+      guestEmail: !userId ? (customerEmail || "") : "",
+      guestName: !userId ? (customerName || "") : "",
+      guestPhone: !userId ? (customerPhone || "") : "",
       products,
       totalAmount: amountNumber,
       deliveryCharges: Number.isFinite(Number(deliveryCharges)) ? Number(deliveryCharges) : 0,
       paymentMethod: "Razorpay",
+      status: "Confirmed",
       isPaid: true,
       paidAt: new Date(),
       paymentResult: {
@@ -185,12 +189,15 @@ export const verifyRazorpayAndCreateOrder = async (req, res) => {
     });
 
     await order.save();
-    await clearUserCartData(userId);
+
+    if (userId) {
+      await clearUserCartData(userId);
+    }
 
     const publish = req.app.get("wsPublish");
     if (typeof publish === "function") {
       try {
-        const populatedOrder = await Order.findById(order._id).populate("user", "name email");
+        const populatedOrder = await Order.findById(order._id);
         publish("admin:orders", {
           type: "new_order",
           order: populatedOrder,

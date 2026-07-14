@@ -1,6 +1,7 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useState } from "react";
 import {
+  addToCartLocal,
   addToCartAsync,
   increaseQuantity,
   decreaseQuantity,
@@ -48,29 +49,30 @@ export default function ProductCard({ product }) {
   const isAddingThis = addingProductId === productId;
 
   const handleAdd = async () => {
-    if (!user) {
-      toast.error("Please login to add items to your cart.");
-      return;
-    }
-
     if (isAddingThis) return;
 
     setAddingProductId(productId);
 
-    const result = await dispatch(addToCartAsync(product));
+    if (user) {
+      const result = await dispatch(addToCartAsync(product));
+      setAddingProductId(null);
 
-    setAddingProductId(null);
-
-    if (result.meta.requestStatus === "fulfilled") {
-      toast.success("Product added to cart successfully.");
-    } else if (result.payload === "SESSION_EXPIRED") {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      dispatch({ type: "auth/logout" });
-      toast.error("Session expired. Please login again.");
+      if (result.meta.requestStatus === "fulfilled") {
+        toast.success("Added to cart");
+      } else if (result.payload === "SESSION_EXPIRED") {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        dispatch({ type: "auth/logout" });
+        dispatch(addToCartLocal(product));
+        toast.success("Added to cart");
+      } else {
+        const msg = typeof result.payload === "string" ? result.payload : "Failed to add to cart";
+        toast.error(msg);
+      }
     } else {
-      const msg = typeof result.payload === "string" ? result.payload : "Failed to add to cart. Please try again.";
-      toast.error(msg);
+      dispatch(addToCartLocal(product));
+      setAddingProductId(null);
+      toast.success("Added to cart");
     }
   };
 

@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import Order from "../models/Order.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -9,6 +10,17 @@ const generateToken = (id) => {
 };
 
 // 🔹 Register User
+export const checkEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+    const user = await User.findOne({ email }).select("name email");
+    return res.json({ exists: !!user, name: user?.name || null });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const registerUser = async (req, res) => {
   const { name, email, password, phone } = req.body;
 
@@ -131,6 +143,27 @@ export const forgotPasswordUser = async (req, res) => {
 
 export const verifyOTPUser = async (req, res) => {
   return res.status(410).json({ message: "OTP verification is no longer supported" });
+};
+
+export const mergeGuestData = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    await Order.updateMany(
+      { guestEmail: email, user: null },
+      { $set: { user: userId, guestEmail: "" } }
+    );
+
+    res.json({ message: "Guest data merged successfully", merged: true });
+  } catch (error) {
+    console.error("Merge guest data error:", error);
+    res.status(500).json({ message: "Failed to merge guest data" });
+  }
 };
 
 export const resetPasswordUser = async (req, res) => {

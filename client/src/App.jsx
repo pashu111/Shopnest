@@ -41,7 +41,7 @@ import AdminDeliveryPartners from "./pages/admin/DeliveryPartners";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AIAssistant from "./components/AIAssistant";
-import { fetchCartAsync, clearCart } from "./redux/slices/cartSlice";
+import { fetchCartAsync, mergeCartAsync, clearCart } from "./redux/slices/cartSlice";
 
 // ⭐ Reward Imports
 import { setReward } from "./redux/slices/rewardSlice";
@@ -102,10 +102,24 @@ export default function App() {
 
   }, [user, dispatch]);
 
-  // ⭐ FETCH CART FROM BACKEND WHEN USER LOGS IN / ON PAGE LOAD
+  // ⭐ FETCH/MERGE CART FROM BACKEND WHEN USER LOGS IN / ON PAGE LOAD
   useEffect(() => {
     if (user) {
-      dispatch(fetchCartAsync());
+      const localItems = (() => {
+        try {
+          const raw = localStorage.getItem("cartItems");
+          return raw ? JSON.parse(raw) : [];
+        } catch { return []; }
+      })();
+
+      if (localItems.length > 0) {
+        dispatch(mergeCartAsync(localItems)).then(() => {
+          localStorage.removeItem("cartItems");
+          localStorage.removeItem("cart");
+        });
+      } else {
+        dispatch(fetchCartAsync());
+      }
     } else {
       dispatch(clearCart());
     }

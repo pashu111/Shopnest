@@ -133,3 +133,46 @@ export const clearCart = async (req, res) => {
     res.status(500).json({ message: "Failed to clear cart" });
   }
 };
+
+export const mergeCart = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { items: localItems } = req.body;
+
+    if (!Array.isArray(localItems) || localItems.length === 0) {
+      const cart = await Cart.findOne({ user: userId }).populate("items.product");
+      return res.json(cart || { items: [] });
+    }
+
+    let cart = await Cart.findOne({ user: userId });
+    if (!cart) {
+      cart = new Cart({ user: userId, items: [] });
+    }
+
+    for (const localItem of localItems) {
+      const productId = localItem._id || localItem.id;
+      if (!productId) continue;
+
+      const product = await Product.findById(productId);
+      if (!product) continue;
+
+      const existingIndex = cart.items.findIndex(
+        (item) => item.product.toString() === productId
+      );
+
+      if (existingIndex > -1) {
+        cart.items[existingIndex].quantity += Number(localItem.quantity) || 1;
+      } else {
+        cart.items.push({ product: productId, quantity: Number(localItem.quantity) || 1 });
+      }
+    }
+
+    await cart.save();
+
+    const populatedCart = await Cart.findOne({ user: userId }).populate("items.product");
+    res.json(populatedCart);
+  } catch (error) {
+    console.error("Merge cart error:", error);
+    res.status(500).json({ message: "Failed to merge cart" });
+  }
+};
