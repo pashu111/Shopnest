@@ -549,7 +549,7 @@ export default function Home() {
         {status === "succeeded" && displayedCategories.length === 0 && !normalizedSearch && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <ShoppingBag size={48} className="text-slate-300 mb-4" />
-            <h3 className="text-xl font-bold text-slate-600">No public products available.</h3>
+            <h3 className="text-xl font-bold text-slate-600">No publicproducts available.</h3>
             <p className="text-sm text-slate-400 mt-1">Check back later for new arrivals.</p>
           </div>
         )}
