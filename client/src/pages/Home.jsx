@@ -321,7 +321,7 @@ export default function Home() {
                 className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-xs font-semibold text-white/90"
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Fresh Picks in 30 min delivery
+                Fresh Picks in 20 min delivery
               </motion.div>
 
               <motion.h1
