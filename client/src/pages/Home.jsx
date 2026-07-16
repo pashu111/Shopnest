@@ -6,18 +6,16 @@ import {
 } from "../redux/slices/productSlice";
 import { useWebSocket } from "../context/WebSocketContext";
 import { toast } from "react-toastify";
-import Navbar from "../components/Navbar";
 import ProductCard from "../components/ProductCard";
-import Footer from "../components/Footer";
+import { ProductGridSkeleton } from "../components/ui/Skeleton";
 import {
   Apple, Carrot, Wheat, Bean, Flame, Droplet,
   Milk, Cookie, Home as HomeIcon, User, Drumstick, Heart,
   ShoppingBag, ArrowRight, Star, Truck, ShieldCheck,
   RotateCcw, HeadphonesIcon, ChevronLeft, ChevronRight,
-  Sparkles, TrendingUp, Package, ShoppingCart,
+  Sparkles, TrendingUp, Package,
 } from "lucide-react";
 
-/* ─── Constants ─── */
 const DEFAULT_CATEGORIES = [
   "fruits", "vegetables", "grains", "pulses", "spices",
   "oils", "dairy", "snacks", "household", "personal", "meat", "health",
@@ -103,7 +101,6 @@ const testimonials = [
   },
 ];
 
-/* ─── Animation Variants ─── */
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
@@ -119,9 +116,9 @@ const scaleIn = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
 };
 
-/* ─── BannerSlide sub-component ─── */
 function BannerSlide({ slide, isActive }) {
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
     <motion.div
@@ -138,13 +135,17 @@ function BannerSlide({ slide, isActive }) {
             <span className="text-white/60 text-xs">Unavailable</span>
           </div>
         ) : (
-          <img
-            src={slide.img}
-            alt={slide.title}
-            className="h-40 w-40 md:h-56 md:w-56 rounded-3xl object-cover shadow-2xl ring-8 ring-white/40"
-            loading="lazy"
-            onError={() => setImageError(true)}
-          />
+          <div className="relative">
+            {!imageLoaded && <div className="h-40 w-40 md:h-56 md:w-56 rounded-3xl bg-white/10 animate-pulse" />}
+            <img
+              src={slide.img}
+              alt={slide.title}
+              className={`h-40 w-40 md:h-56 md:w-56 rounded-3xl object-cover shadow-2xl ring-8 ring-white/40 transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0 absolute inset-0"}`}
+              loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageError(true)}
+            />
+          </div>
         )}
       </div>
       <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-slate-900/35 to-transparent flex flex-col justify-center px-6 sm:px-10">
@@ -159,28 +160,6 @@ function BannerSlide({ slide, isActive }) {
   );
 }
 
-/* ─── Skeleton Product Grid ─── */
-function ProductSkeleton() {
-  return (
-    <div className="animate-pulse space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-            <div className="aspect-4/3 bg-slate-200" />
-            <div className="p-4 space-y-2">
-              <div className="h-4 bg-slate-200 rounded w-3/4" />
-              <div className="h-3 bg-slate-100 rounded w-1/2" />
-              <div className="h-5 bg-slate-200 rounded w-1/3 mt-3" />
-              <div className="h-9 bg-slate-200 rounded-full mt-3" />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Main Component ─── */
 export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentBanner, setCurrentBanner] = useState(0);
@@ -235,7 +214,6 @@ export default function Home() {
   const toggleCategory = (cat) =>
     setExpandedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }));
 
-  /* ─── Banner auto-slide ─── */
   const nextBanner = useCallback(
     () => setCurrentBanner((p) => (p + 1) % banners.length),
     [],
@@ -246,7 +224,6 @@ export default function Home() {
     return () => clearInterval(bannerIntervalRef.current);
   }, [nextBanner]);
 
-  /* ─── API data ─── */
   useEffect(() => {
     if (isOffline) return;
     if (status === "idle") dispatch(fetchProducts());
@@ -263,7 +240,6 @@ export default function Home() {
     };
   }, []);
 
-  /* ─── WebSocket ─── */
   const { lastMessage, status: wsStatus } = useWebSocket();
   useEffect(() => {
     if (wsStatus !== "open") return;
@@ -275,7 +251,6 @@ export default function Home() {
     }
   }, [lastMessage, wsStatus, dispatch]);
 
-  /* ─── Testimonial auto-rotate ─── */
   useEffect(() => {
     const t = setInterval(
       () => setTestimonialIndex((p) => (p + 1) % testimonials.length),
@@ -284,7 +259,6 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
-  /* ─── Newsletter ─── */
   const handleNewsletterSubmit = (e) => {
     e.preventDefault();
     if (email.trim()) {
@@ -294,14 +268,9 @@ export default function Home() {
     }
   };
 
-  /* ================================================================ */
-  /*                        RENDER                                    */
-  /* ================================================================ */
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <Navbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-
-      {/* ════════════════ HERO ════════════════ */}
+    <div className="min-h-screen bg-surface">
+      {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-br from-emerald-800 via-teal-700 to-cyan-600">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
         <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-emerald-300/20 blur-3xl" />
@@ -309,7 +278,6 @@ export default function Home() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-20">
           <div className="grid lg:grid-cols-[1.1fr_1fr] gap-10 lg:gap-16 items-center">
-            {/* Hero Text */}
             <motion.div
               initial="hidden"
               animate="visible"
@@ -348,7 +316,7 @@ export default function Home() {
               >
                 <a
                   href="#products"
-                  className="inline-flex items-center gap-2 bg-white text-emerald-800 px-6 py-3.5 rounded-xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all"
+                  className="inline-flex items-center gap-2 bg-white text-emerald-800 px-6 py-3.5 rounded-xl font-bold shadow-card hover:shadow-card-hover hover:scale-105 transition-all"
                 >
                   <ShoppingBag size={18} />
                   Shop Now
@@ -362,7 +330,6 @@ export default function Home() {
                 </a>
               </motion.div>
 
-              {/* Stats */}
               <motion.div
                 variants={fadeUp}
                 className="mt-8 grid grid-cols-3 gap-4 max-w-md"
@@ -385,7 +352,6 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
-            {/* Banner Carousel */}
             <div className="relative h-64 sm:h-80 md:h-96 rounded-3xl overflow-hidden shadow-2xl shadow-black/20">
               <AnimatePresence mode="wait">
                 <BannerSlide
@@ -432,7 +398,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ════════════════ FEATURED CATEGORIES ════════════════ */}
+      {/* FEATURED CATEGORIES */}
       <motion.section
         id="categories"
         initial="hidden"
@@ -443,7 +409,7 @@ export default function Home() {
       >
         <motion.div variants={fadeUp} className="flex items-center justify-between mb-8">
           <div>
-            <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
+            <span className="text-xs font-bold text-brand-600 uppercase tracking-widest">
               Categories
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
@@ -455,8 +421,8 @@ export default function Home() {
               onClick={() => setSelectedCategory(null)}
               className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                 selectedCategory === null
-                  ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-brand-600 text-white shadow-card"
+                  : "bg-surface-tertiary text-slate-600 hover:bg-slate-200"
               }`}
             >
               All
@@ -467,8 +433,8 @@ export default function Home() {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold capitalize transition-all ${
                   selectedCategory === cat
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-200"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-brand-600 text-white shadow-card"
+                    : "bg-surface-tertiary text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 {cat}
@@ -494,8 +460,8 @@ export default function Home() {
                 }
                 className={`group relative flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all duration-300 ${
                   selectedCategory === cat
-                    ? "border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-200/40"
-                    : "border-slate-200 bg-white hover:shadow-lg hover:-translate-y-1"
+                    ? "border-brand-500 bg-brand-50 shadow-card"
+                    : "border-slate-200 bg-surface hover:shadow-card-hover hover:-translate-y-1"
                 }`}
               >
                 <div
@@ -506,13 +472,12 @@ export default function Home() {
                 <span className="text-xs font-semibold capitalize text-slate-700 text-center leading-tight">
                   {cat}
                 </span>
-                <span className="text-[10px] text-slate-400 -mt-1">{count}</span>
+                <span className="text-[10px] text-slate-400 -mt-1">{count} items</span>
               </motion.button>
             );
           })}
         </motion.div>
 
-        {/* Mobile category filter chips */}
         <div className="mt-4 flex sm:hidden flex-wrap gap-2">
           {categoriesOrder.map((cat) => (
             <button
@@ -520,8 +485,8 @@ export default function Home() {
               onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-all ${
                 selectedCategory === cat
-                  ? "bg-emerald-600 text-white"
-                  : "bg-slate-100 text-slate-600"
+                  ? "bg-brand-600 text-white"
+                  : "bg-surface-tertiary text-slate-600"
               }`}
             >
               {cat}
@@ -530,18 +495,20 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* ════════════════ FEATURED PRODUCTS ════════════════ */}
+      {/* FEATURED PRODUCTS */}
       <section id="products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16">
-        {status === "loading" && <ProductSkeleton />}
+        {status === "loading" && <ProductGridSkeleton count={10} />}
 
         {isOffline && (
-          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium">
-            You are offline. Showing bundled products until the connection returns.
+          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium flex items-center gap-2">
+            <Package size={16} />
+            You are offline. Showing cached products until the connection returns.
           </div>
         )}
 
         {!isOffline && status === "failed" && items.length === 0 && (
-          <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium">
+          <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium flex items-center gap-2">
+            <Package size={16} />
             {error || "Failed to load products."}
           </div>
         )}
@@ -549,7 +516,7 @@ export default function Home() {
         {status === "succeeded" && displayedCategories.length === 0 && !normalizedSearch && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <ShoppingBag size={48} className="text-slate-300 mb-4" />
-            <h3 className="text-xl font-bold text-slate-600">No publicproducts available.</h3>
+            <h3 className="text-xl font-bold text-slate-600">No public products available.</h3>
             <p className="text-sm text-slate-400 mt-1">Check back later for new arrivals.</p>
           </div>
         )}
@@ -575,7 +542,7 @@ export default function Home() {
               >
                 <div className="flex items-center justify-between mb-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-1 h-7 rounded-full bg-emerald-500" />
+                    <div className="w-1 h-7 rounded-full bg-brand-500" />
                     <h2 className="text-xl sm:text-2xl font-bold capitalize text-slate-900">
                       {category}
                     </h2>
@@ -586,7 +553,7 @@ export default function Home() {
                   {products.length > 10 && (
                     <button
                       onClick={() => toggleCategory(category)}
-                      className="text-sm font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 transition-colors"
+                      className="text-sm font-semibold text-brand-700 hover:text-brand-800 flex items-center gap-1 transition-colors"
                     >
                       {showAll ? "Show less" : `View all ${products.length}`}
                       <ArrowRight size={14} />
@@ -609,7 +576,7 @@ export default function Home() {
           })}
       </section>
 
-      {/* ════════════════ SPECIAL OFFERS ════════════════ */}
+      {/* SPECIAL OFFERS */}
       <motion.section
         initial="hidden"
         whileInView="visible"
@@ -618,7 +585,7 @@ export default function Home() {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16"
       >
         <motion.div variants={fadeUp} className="text-center mb-8">
-          <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
+          <span className="text-xs font-bold text-brand-600 uppercase tracking-widest">
             Deals & Offers
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
@@ -629,7 +596,7 @@ export default function Home() {
         <div className="grid sm:grid-cols-2 gap-5">
           <motion.div
             variants={scaleIn}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-600 via-pink-600 to-purple-700 p-6 sm:p-8 text-white"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-600 via-pink-600 to-purple-700 p-6 sm:p-8 text-white"
           >
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
             <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5 blur-xl" />
@@ -640,7 +607,7 @@ export default function Home() {
                 Get up to <span className="font-bold text-yellow-300">20% off</span> on your
                 first order. Use code <span className="font-mono font-bold text-yellow-300">WELCOME20</span>.
               </p>
-              <button className="mt-4 inline-flex items-center gap-2 bg-white text-rose-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-rose-50 transition-all shadow-lg">
+              <button className="mt-4 inline-flex items-center gap-2 bg-white text-rose-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-rose-50 transition-all shadow-card">
                 Claim Offer <ArrowRight size={15} />
               </button>
             </div>
@@ -648,7 +615,7 @@ export default function Home() {
 
           <motion.div
             variants={scaleIn}
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-6 sm:p-8 text-white"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 p-6 sm:p-8 text-white"
           >
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
             <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5 blur-xl" />
@@ -659,7 +626,7 @@ export default function Home() {
                 Earn <span className="font-bold text-yellow-300">reward coins</span> on every
                 purchase. Redeem them for discounts, free items &amp; exclusive deals.
               </p>
-              <button className="mt-4 inline-flex items-center gap-2 bg-white text-emerald-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-all shadow-lg">
+              <button className="mt-4 inline-flex items-center gap-2 bg-white text-emerald-700 px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-all shadow-card">
                 Learn More <ArrowRight size={15} />
               </button>
             </div>
@@ -667,17 +634,17 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* ════════════════ WHY CHOOSE US ════════════════ */}
+      {/* WHY CHOOSE US */}
       <motion.section
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}
         variants={stagger}
-        className="bg-white border-y border-slate-200"
+        className="bg-surface border-y border-slate-200"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
           <motion.div variants={fadeUp} className="text-center mb-10">
-            <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
+            <span className="text-xs font-bold text-brand-600 uppercase tracking-widest">
               Why ShopNest
             </span>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
@@ -693,9 +660,9 @@ export default function Home() {
               <motion.div
                 key={item.title}
                 variants={scaleIn}
-                className="group p-6 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-white hover:shadow-xl hover:border-emerald-200 hover:-translate-y-1 transition-all duration-300"
+                className="group p-6 rounded-xl border border-slate-200 bg-surface-secondary hover:bg-surface hover:shadow-card-hover hover:border-brand-200 hover:-translate-y-1 transition-all duration-300"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md mb-4 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-500 to-teal-500 flex items-center justify-center shadow-md mb-4 group-hover:scale-110 transition-transform duration-300">
                   <item.icon size={22} className="text-white" />
                 </div>
                 <h3 className="text-lg font-bold text-slate-900">{item.title}</h3>
@@ -708,7 +675,7 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* ════════════════ TESTIMONIALS ════════════════ */}
+      {/* TESTIMONIALS */}
       <motion.section
         initial="hidden"
         whileInView="visible"
@@ -717,7 +684,7 @@ export default function Home() {
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16"
       >
         <motion.div variants={fadeUp} className="text-center mb-10">
-          <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest">
+          <span className="text-xs font-bold text-brand-600 uppercase tracking-widest">
             Testimonials
           </span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
@@ -733,9 +700,9 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -40 }}
               transition={{ duration: 0.4 }}
-              className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm text-center"
+              className="bg-surface border border-slate-200 rounded-2xl p-8 shadow-card text-center"
             >
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mx-auto text-white text-xl font-bold shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-500 to-teal-500 flex items-center justify-center mx-auto text-white text-xl font-bold shadow-card">
                 {testimonials[testimonialIndex].name
                   .split(" ")
                   .map((n) => n[0])
@@ -744,7 +711,7 @@ export default function Home() {
               <h4 className="mt-4 text-lg font-bold text-slate-900">
                 {testimonials[testimonialIndex].name}
               </h4>
-              <p className="text-sm text-emerald-600 font-medium">
+              <p className="text-sm text-brand-600 font-medium">
                 {testimonials[testimonialIndex].role}
               </p>
               <div className="flex justify-center gap-1 mt-3">
@@ -773,7 +740,7 @@ export default function Home() {
                 onClick={() => setTestimonialIndex(i)}
                 className={`w-2.5 h-2.5 rounded-full transition-all ${
                   i === testimonialIndex
-                    ? "bg-emerald-600 w-6"
+                    ? "bg-brand-600 w-6"
                     : "bg-slate-300 hover:bg-slate-400"
                 }`}
               />
@@ -786,7 +753,7 @@ export default function Home() {
                 (p) => (p - 1 + testimonials.length) % testimonials.length,
               )
             }
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-12 bg-white border border-slate-200 p-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-slate-50 transition-all"
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 sm:-translate-x-12 bg-surface border border-slate-200 p-2.5 rounded-full shadow-card hover:shadow-card-hover hover:bg-slate-50 transition-all"
             aria-label="Previous testimonial"
           >
             <ChevronLeft size={18} />
@@ -795,7 +762,7 @@ export default function Home() {
             onClick={() =>
               setTestimonialIndex((p) => (p + 1) % testimonials.length)
             }
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-12 bg-white border border-slate-200 p-2.5 rounded-full shadow-md hover:shadow-lg hover:bg-slate-50 transition-all"
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 sm:translate-x-12 bg-surface border border-slate-200 p-2.5 rounded-full shadow-card hover:shadow-card-hover hover:bg-slate-50 transition-all"
             aria-label="Next testimonial"
           >
             <ChevronRight size={18} />
@@ -803,7 +770,7 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* ════════════════ NEWSLETTER ════════════════ */}
+      {/* NEWSLETTER */}
       <motion.section
         initial="hidden"
         whileInView="visible"
@@ -811,7 +778,7 @@ export default function Home() {
         variants={fadeUp}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16"
       >
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-600 px-6 sm:px-12 py-12 sm:py-16 text-center text-white">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 via-brand-600 to-teal-600 px-6 sm:px-12 py-12 sm:py-16 text-center text-white">
           <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-emerald-400/20 blur-3xl" />
           <div className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-teal-400/20 blur-3xl" />
 
@@ -845,7 +812,7 @@ export default function Home() {
                 />
                 <button
                   type="submit"
-                  className="w-full sm:w-auto bg-white text-emerald-700 px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-all shadow-lg whitespace-nowrap"
+                  className="w-full sm:w-auto bg-white text-brand-700 px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-50 transition-all shadow-card whitespace-nowrap"
                 >
                   Subscribe
                 </button>
@@ -854,13 +821,10 @@ export default function Home() {
           </div>
         </div>
       </motion.section>
-
-      <Footer />
     </div>
   );
 }
 
-/* Mail icon used inline for the newsletter section */
 function MailStrokeIcon() {
   return (
     <svg

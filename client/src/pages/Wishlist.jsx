@@ -11,7 +11,7 @@ function WishlistImage({ item }) {
   const [error, setError] = useState(false);
   if (error || !item.image) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-slate-100 text-slate-400">
+      <div className="h-full w-full flex items-center justify-center bg-surface-tertiary text-slate-400">
         <ImageIcon size={32} />
       </div>
     );
@@ -32,14 +32,16 @@ const Wishlist = () => {
 
   if (!wishlist || wishlist.length === 0) {
     return (
-      <div className="min-h-screen bg-[#f7f5f2]">
+      <div className="min-h-screen bg-surface-secondary">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14">
-          <div className="bg-white border border-slate-200 rounded-2xl p-10 text-center shadow-sm">
-            <Heart size={48} className="mx-auto text-slate-300 mb-4" />
-            <h2 className="text-2xl font-semibold text-slate-900">
+          <div className="bg-surface border border-slate-200 rounded-2xl p-14 text-center shadow-card">
+            <div className="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center mx-auto mb-5">
+              <Heart size={36} className="text-rose-300" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900">
               Your Wishlist is empty
             </h2>
-            <p className="text-slate-600 mt-2">
+            <p className="text-slate-500 mt-2">
               Add your favorite products to keep them here.
             </p>
           </div>
@@ -49,22 +51,22 @@ const Wishlist = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f5f2]">
+    <div className="min-h-screen bg-surface-secondary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-rose-600">
+            <p className="text-xs font-semibold uppercase tracking-wider text-rose-500">
               Saved For Later
             </p>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
               My Wishlist
             </h1>
-            <p className="text-slate-600 mt-1">
+            <p className="text-slate-500 mt-1">
               Keep track of items you love and revisit anytime.
             </p>
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm font-semibold">
-            {wishlist.length} items
+          <div className="bg-surface border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold text-slate-500 shadow-card">
+            {wishlist.length} item{wishlist.length !== 1 ? "s" : ""}
           </div>
         </div>
 
@@ -77,9 +79,9 @@ const Wishlist = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05, duration: 0.3 }}
-                className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                className="bg-surface border border-slate-200 rounded-2xl p-4 shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="relative overflow-hidden rounded-xl bg-slate-50 aspect-square">
+                <div className="relative overflow-hidden rounded-xl bg-surface-secondary aspect-square">
                   <WishlistImage item={item} />
                 </div>
 
@@ -87,7 +89,7 @@ const Wishlist = () => {
                   <h3 className="font-semibold text-lg text-slate-900 line-clamp-1">
                     {item.name}
                   </h3>
-                  <p className="text-emerald-600 font-bold mt-1">
+                  <p className="text-brand-600 font-bold mt-1">
                     ₹{item.price}
                   </p>
                 </div>

@@ -5,6 +5,7 @@ import { useWebSocket } from "./context/WebSocketContext";
 
 // Layouts
 import AdminLayout from "./layouts/AdminLayout";
+import Layout from "./components/Layout";
 
 // Shop Pages
 import Home from "./pages/Home";
@@ -140,12 +141,11 @@ export default function App() {
     <>
       <Routes>
 
-        {/* PUBLIC ROUTES */}
+        {/* PUBLIC — standalone (no layout) */}
 
 <Route path="/" element={<RoleSelect />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/rewards" element={<Rewards />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/admin/login" element={<Adminlogin />} />
@@ -161,16 +161,19 @@ export default function App() {
             </DeliveryProtectedRoute>
           }
         />
-        <Route path="/register" element={<Register />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/confirmation" element={<Confirmation />} />
-        <Route path="/order-success" element={<OrderSuccess />} />
-        <Route path="/wishlist" element={<Wishlist />} />
-        <Route path="/orders" element={<OrderHistory />} />
-        <Route path="/orders/:orderId" element={<OrderTracking />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/rewards" element={<Rewards />} />
+
+        {/* PUBLIC — with layout (navbar + footer) */}
+
+        <Route path="/home" element={<Layout><Home /></Layout>} />
+        <Route path="/cart" element={<Layout><Cart /></Layout>} />
+        <Route path="/checkout" element={<Layout><Checkout /></Layout>} />
+        <Route path="/confirmation" element={<Layout><Confirmation /></Layout>} />
+        <Route path="/order-success" element={<Layout><OrderSuccess /></Layout>} />
+        <Route path="/wishlist" element={<Layout><Wishlist /></Layout>} />
+        <Route path="/orders" element={<Layout><OrderHistory /></Layout>} />
+        <Route path="/orders/:orderId" element={<Layout><OrderTracking /></Layout>} />
+        <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+        <Route path="/rewards" element={<Layout><Rewards /></Layout>} />
 
         {/* ADMIN ROUTES */}
 

@@ -6,70 +6,77 @@ export default function Rewards() {
   const rewardCoins = useSelector((state) => state.reward.coins || 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 via-orange-50 to-amber-100 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-accent-50 via-orange-50 to-amber-100 py-12">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-3 bg-yellow-400 px-6 py-3 rounded-2xl shadow-lg">
-            <Coins size={32} className="text-yellow-800" />
-            <div>
-              <h1 className="text-4xl font-black text-yellow-900 tracking-tight">
+          <div className="inline-flex items-center gap-4 bg-surface border border-accent-200 px-7 py-5 rounded-2xl shadow-card">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent-400 to-accent-500 flex items-center justify-center shadow-md">
+              <Coins size={28} className="text-white" />
+            </div>
+            <div className="text-left">
+              <h1 className="text-4xl font-black text-slate-900 tracking-tight">
                 {rewardCoins.toLocaleString()}
               </h1>
-              <p className="text-lg text-yellow-800 font-semibold uppercase tracking-wide">
+              <p className="text-sm text-accent-700 font-semibold uppercase tracking-wider">
                 Reward Coins
               </p>
             </div>
           </div>
-          <p className="text-xl text-gray-700 mt-4 max-w-md mx-auto">
+          <p className="text-slate-600 mt-4 max-w-md mx-auto">
             Earn coins on every order. Scratch to reveal instant rewards!
           </p>
         </div>
 
-        {/* Quick Actions */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Link to="/home" className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-amber-100 hover:-translate-y-2">
-            <Gift className="w-12 h-12 text-amber-500 mx-auto mb-4 group-hover:scale-110 transition" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2 text-center">Shop & Earn</h3>
-            <p className="text-sm text-gray-600 text-center">Earn 5% coins on every purchase</p>
+          <Link to="/home" className="group bg-surface p-6 rounded-2xl shadow-card hover:shadow-card-hover transition-all border border-slate-200 hover:border-brand-200 hover:-translate-y-1">
+            <div className="w-12 h-12 rounded-xl bg-accent-50 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+              <Gift className="w-6 h-6 text-accent-500" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 mb-2 text-center">Shop & Earn</h3>
+            <p className="text-sm text-slate-500 text-center">Earn 5% coins on every purchase</p>
           </Link>
 
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-amber-100 text-center">
-            <div className="h-32 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-4">
-              <Gift className="w-16 h-16 text-white opacity-75" />
+          <div className="bg-surface p-6 rounded-2xl shadow-card border border-slate-200 text-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4">
+              <Gift className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Daily Scratch</h3>
-            <p className="text-sm text-gray-600">Coming Soon</p>
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Daily Scratch</h3>
+            <p className="text-sm text-slate-500">Coming Soon</p>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-6 rounded-2xl text-white shadow-xl">
-            <Star className="w-12 h-12 mx-auto mb-4 opacity-75" />
+          <div className="bg-gradient-to-br from-purple-600 to-indigo-700 p-6 rounded-2xl shadow-card text-white">
+            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center mx-auto mb-4">
+              <Star className="w-6 h-6 text-accent-300" />
+            </div>
             <h3 className="text-lg font-bold mb-2 text-center">VIP Status</h3>
-            <p className="text-sm text-center opacity-90">Reach 5000 coins for Premium</p>
-            <div className="w-full bg-white/20 rounded-full h-2 mt-4">
+            <p className="text-sm text-center text-white/70">Reach 5,000 coins for Premium</p>
+            <div className="w-full bg-white/15 rounded-full h-2.5 mt-4 overflow-hidden">
               <div 
-                className="bg-white h-2 rounded-full transition-all" 
+                className="bg-white h-2.5 rounded-full transition-all" 
                 style={{ width: `${Math.min((rewardCoins / 5000) * 100, 100)}%` }}
               />
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-6 rounded-2xl text-white shadow-xl">
-            <Crown className="w-12 h-12 mx-auto mb-4 opacity-75" />
+          <div className="bg-gradient-to-br from-brand-600 to-teal-600 p-6 rounded-2xl shadow-card text-white">
+            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center mx-auto mb-4">
+              <Crown className="w-6 h-6 text-accent-300" />
+            </div>
             <h3 className="text-lg font-bold mb-2 text-center">Redeem</h3>
-            <p className="text-sm text-center opacity-90">Coming Soon</p>
+            <p className="text-sm text-center text-white/70">Coming Soon</p>
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-3xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-            <Trophy className="text-amber-500" />
+        <div className="bg-surface rounded-2xl shadow-card border border-slate-200 p-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-accent-50 flex items-center justify-center">
+              <Trophy className="w-4 h-4 text-accent-500" />
+            </div>
             Recent Rewards
           </h2>
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg">Your rewards history will appear here</p>
-            <p className="text-sm mt-2 opacity-75">Earn more by shopping!</p>
+          <div className="text-center py-12 text-slate-400">
+            <p className="text-base">Your rewards history will appear here</p>
+            <p className="text-sm mt-1.5">Earn more by shopping!</p>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import crypto from "crypto";
 import Order from "../models/Order.js";
 import { getRazorpayInstance, getRazorpayKeyId, requireRazorpayConfig } from "../config/razorpay.js";
 import { clearUserCartData } from "../utils/cartCleanup.js";
+import { validateAndDeductInventory } from "../utils/inventoryUtils.js";
 import {
   NEARBY_ORDER_TTL_MINUTES,
   publishNearbyOrderToEligiblePartners,
@@ -131,6 +132,29 @@ export const verifyRazorpayAndCreateOrder = async (req, res) => {
       return res.status(400).json({ message: "Order products are required" });
     }
 
+    if (userId) {
+      const existingOrder = await Order.findOne({
+        user: userId,
+        $or: [
+          { "paymentResult.razorpayPaymentId": paymentId },
+          { "paymentResult.razorpayOrderId": orderId },
+        ],
+      });
+
+      if (existingOrder) {
+        await clearUserCartData(userId);
+        return res.json(existingOrder);
+      }
+    }
+
+    const inventoryCheck = await validateAndDeductInventory(products);
+    if (!inventoryCheck.valid) {
+      return res.status(409).json({
+        message: "Inventory validation failed",
+        errors: inventoryCheck.errors,
+      });
+    }
+
     const amountNumber = Number(totalAmount);
     if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
       return res.status(400).json({ message: "Valid totalAmount is required" });
@@ -146,21 +170,6 @@ export const verifyRazorpayAndCreateOrder = async (req, res) => {
       return res.status(400).json({ message: locationError });
     }
     const normalizedDeliveryAddress = normalizedDeliveryLocation.fullAddress;
-
-    if (userId) {
-      const existingOrder = await Order.findOne({
-        user: userId,
-        $or: [
-          { "paymentResult.razorpayPaymentId": paymentId },
-          { "paymentResult.razorpayOrderId": orderId },
-        ],
-      });
-
-      if (existingOrder) {
-        await clearUserCartData(userId);
-        return res.json(existingOrder);
-      }
-    }
 
     const order = new Order({
       user: userId || null,

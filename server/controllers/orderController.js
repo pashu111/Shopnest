@@ -2,6 +2,7 @@ import Order from "../models/Order.js";
 import User from "../models/User.js";
 import DeliveryPartner from "../models/DeliveryPartner.js";
 import { clearUserCartData } from "../utils/cartCleanup.js";
+import { validateAndDeductInventory } from "../utils/inventoryUtils.js";
 import { sendOrderConfirmation } from "../utils/emailService.js";
 import {
   NEARBY_ORDER_TTL_MINUTES,
@@ -108,6 +109,14 @@ export const createOrder = async (req, res) => {
     }
     const normalizedDeliveryAddress = normalizedDeliveryLocation.fullAddress;
 
+    const inventoryCheck = await validateAndDeductInventory(products);
+    if (!inventoryCheck.valid) {
+      return res.status(409).json({
+        message: "Inventory validation failed",
+        errors: inventoryCheck.errors,
+      });
+    }
+
     const order = new Order({
       user: req.user.id,
       products,
@@ -194,6 +203,14 @@ export const createGuestOrder = async (req, res) => {
       return res.status(400).json({ message: locationError });
     }
     const normalizedDeliveryAddress = normalizedDeliveryLocation.fullAddress;
+
+    const inventoryCheck = await validateAndDeductInventory(products);
+    if (!inventoryCheck.valid) {
+      return res.status(409).json({
+        message: "Inventory validation failed",
+        errors: inventoryCheck.errors,
+      });
+    }
 
     const order = new Order({
       user: null,
