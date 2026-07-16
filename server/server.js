@@ -31,7 +31,7 @@ const FRONTEND_URL = (process.env.FRONTEND_URL || "").trim().replace(/\/$/, "");
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5000",
-  "https://shopnest-weld-psi.vercel.app",
+  "https://shopnest-gold.vercel.app",
   "https://shopnest-klbn.onrender.com",
 ];
 if (FRONTEND_URL && !allowedOrigins.includes(FRONTEND_URL)) {
