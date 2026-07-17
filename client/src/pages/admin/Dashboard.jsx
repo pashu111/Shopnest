@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AlertTriangle, ClipboardList, Filter, Package, Search, Truck, Wallet, TrendingUp, Users, ShoppingCart
+  AlertTriangle, ClipboardList, Filter, Package, Search, Truck, Wallet
 } from "lucide-react";
 import productService from "../../services/productService";
 import { getAllOrders } from "../../services/orderService";
@@ -276,7 +276,7 @@ export default function Dashboard() {
                           <td className="px-6 py-4 text-sm text-slate-600 font-medium uppercase tracking-tight">{product.category}</td>
                           <td className="px-6 py-4 text-sm font-bold text-slate-900">{formatCurrency(product.price)}</td>
                           <td className="px-6 py-4">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${isLowStock ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-700"}`}>{stock} units</span>
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${isLowStock ? "bg-rose-100 text-rose-700" : stock === 0 ? "bg-slate-200 text-slate-500" : "bg-slate-100 text-slate-700"}`}>{stock === 0 ? "Out" : `${stock} units`}</span>
                           </td>
                         </tr>
                       );

@@ -15,6 +15,10 @@ export const addToCart = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
+    if (Number(product.stock) <= 0) {
+      return res.status(400).json({ message: `"${product.name}" is out of stock` });
+    }
+
     let cart = await Cart.findOne({ user: userId });
 
     if (!cart) {
@@ -69,6 +73,15 @@ export const updateCartItem = async (req, res) => {
 
     if (!quantity || quantity < 1) {
       return res.status(400).json({ message: "Quantity must be at least 1" });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    if (quantity > Number(product.stock)) {
+      return res.status(400).json({ message: `Only ${product.stock} ${product.name} available in stock` });
     }
 
     const cart = await Cart.findOne({ user: userId });

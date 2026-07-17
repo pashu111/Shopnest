@@ -1,6 +1,6 @@
 import Product from "../models/Product.js";
 
-export async function validateAndDeductInventory(products) {
+export async function validateInventory(products) {
   if (!Array.isArray(products) || products.length === 0) {
     return { valid: false, errors: ["No products in order"] };
   }
@@ -17,7 +17,6 @@ export async function validateAndDeductInventory(products) {
   }
 
   const errors = [];
-  const deductions = [];
 
   for (const item of products) {
     const pid = item.productId;
@@ -34,24 +33,35 @@ export async function validateAndDeductInventory(products) {
       continue;
     }
 
-    const availableStock = Number(dbProduct.stock) || 0;
+    const availableStock = dbProduct.stock == null ? Infinity : Number(dbProduct.stock);
     if (availableStock < qty) {
       errors.push(
-        `Insufficient stock for "${dbProduct.name}": requested ${qty}, available ${availableStock}`
+        `Only ${availableStock} ${dbProduct.name} available in stock`
       );
       continue;
     }
-
-    deductions.push({ productId: pid, quantity: qty });
   }
 
   if (errors.length > 0) {
     return { valid: false, errors };
   }
 
+  return { valid: true, errors: [] };
+}
+
+export async function deductInventory(products) {
+  if (!Array.isArray(products) || products.length === 0) return;
+
+  const deductions = [];
+  for (const item of products) {
+    const pid = item.productId;
+    const qty = Number(item.quantity) || 0;
+    if (pid && qty > 0) {
+      deductions.push({ productId: pid, quantity: qty });
+    }
+  }
+
   for (const d of deductions) {
     await Product.findByIdAndUpdate(d.productId, { $inc: { stock: -d.quantity } });
   }
-
-  return { valid: true, errors: [] };
 }

@@ -15,6 +15,7 @@ const normalizeBackendCart = (apiCart) => {
       description: entry.product.description,
       category: entry.product.category,
       stock: entry.product.stock,
+
       quantity: entry.quantity,
       cartItemId: entry._id,
     }));

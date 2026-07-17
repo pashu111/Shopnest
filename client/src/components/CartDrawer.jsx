@@ -16,6 +16,7 @@ export default function CartDrawer({ open, onClose }) {
   );
   const deliveryCharges = subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_CHARGES : 0;
   const total = subtotal + deliveryCharges;
+  const hasOutOfStockItems = (cart || []).some((item) => Number(item.stock) <= 0);
 
   return (
     <AnimatePresence>
@@ -58,24 +59,33 @@ export default function CartDrawer({ open, onClose }) {
                   <p className="text-sm mt-1">Add items to get started</p>
                 </div>
               ) : (
-                cart.map((item) => (
-                  <div
-                    key={item.id || item._id}
-                    className="flex items-center gap-3 bg-slate-50 rounded-xl p-3"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-900 text-sm truncate">
-                        {item.name}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        ₹{item.price} × {item.quantity}
-                      </p>
+                cart.map((item) => {
+                  const isOutOfStock = Number(item.stock) <= 0;
+                  return (
+                    <div
+                      key={item.id || item._id}
+                      className={`flex items-center gap-3 rounded-xl p-3 ${isOutOfStock ? "bg-rose-50 border border-rose-200" : "bg-slate-50"}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className={`font-semibold text-sm truncate ${isOutOfStock ? "text-slate-400" : "text-slate-900"}`}>
+                          {item.name}
+                        </p>
+                        {isOutOfStock ? (
+                          <p className="text-xs text-rose-600 font-semibold mt-0.5">Out of Stock</p>
+                        ) : (
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            ₹{item.price} × {item.quantity}
+                          </p>
+                        )}
+                      </div>
+                      {!isOutOfStock && (
+                        <p className="font-bold text-emerald-700 text-sm shrink-0">
+                          ₹{(item.price * item.quantity).toFixed(2)}
+                        </p>
+                      )}
                     </div>
-                    <p className="font-bold text-emerald-700 text-sm shrink-0">
-                      ₹{(item.price * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
@@ -113,9 +123,15 @@ export default function CartDrawer({ open, onClose }) {
                   View Cart <ArrowRight size={16} />
                 </button>
 
+                {hasOutOfStockItems && (
+                  <div className="text-xs text-rose-600 font-medium text-center">
+                    Remove out-of-stock items to checkout.
+                  </div>
+                )}
                 <button
-                  onClick={() => { navigate("/checkout"); onClose(); }}
-                  className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-semibold text-sm transition shadow-lg shadow-emerald-200/50"
+                  onClick={() => { if (!hasOutOfStockItems) { navigate("/checkout"); onClose(); } }}
+                  disabled={hasOutOfStockItems}
+                  className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 disabled:cursor-not-allowed text-white py-2.5 rounded-xl font-semibold text-sm transition shadow-lg shadow-emerald-200/50"
                 >
                   Checkout <ArrowRight size={16} />
                 </button>

@@ -113,6 +113,7 @@ const emptyProduct = {
     price: "",
     category: DEFAULT_CATEGORIES[0] || "general",
     image: "",
+    stock: 10,
   };
   const [currentProduct, setCurrentProduct] = useState(emptyProduct);
 
@@ -207,7 +208,7 @@ const emptyProduct = {
       price: parseFloat(currentProduct.price) || 0,
       category: normalizeCategory(currentProduct.category),
       description: currentProduct.description || "",
-      stock: currentProduct.stock ?? 0,
+      stock: Number(currentProduct.stock) ?? 10,
       image: currentProduct.image || "",
     };
 
@@ -290,20 +291,21 @@ const emptyProduct = {
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Product</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Category</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Price</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Stock</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading && (
                 <tr>
-                  <td colSpan="4" className="px-6 py-6 text-center text-gray-400">
+                  <td colSpan="5" className="px-6 py-6 text-center text-gray-400">
                     Loading products...
                   </td>
                 </tr>
               )}
               {!isLoading && loadError && (
                 <tr>
-                  <td colSpan="4" className="px-6 py-6 text-center text-red-500">
+                  <td colSpan="5" className="px-6 py-6 text-center text-red-500">
                     {loadError}
                   </td>
                 </tr>
@@ -340,6 +342,11 @@ const emptyProduct = {
                     </td>
                     <td className="px-6 py-4 font-bold text-gray-900">
                       ₹{item.price}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${Number(item.stock) <= 0 ? "bg-red-100 text-red-600" : "bg-slate-100 text-slate-700"}`}>
+                        {Number(item.stock) <= 0 ? "Out of Stock" : `${item.stock} units`}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-1">
@@ -402,21 +409,32 @@ const emptyProduct = {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Category</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Stock</label>
                   <input
                     required
-                    list="admin-product-categories"
-                    className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none bg-gray-50 cursor-pointer"
-                    value={currentProduct.category}
-                    onChange={(e) => setCurrentProduct({ ...currentProduct, category: e.target.value })}
-                    placeholder="e.g. baby care"
+                    type="number"
+                    min="0"
+                    className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none bg-gray-50"
+                    value={currentProduct.stock}
+                    onChange={(e) => setCurrentProduct({ ...currentProduct, stock: e.target.value })}
                   />
-                  <datalist id="admin-product-categories">
-                    {categoryOptions.map((cat) => (
-                      <option key={cat} value={cat} />
-                    ))}
-                  </datalist>
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1 ml-1">Category</label>
+                <input
+                  required
+                  list="admin-product-categories"
+                  className="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-red-500 outline-none bg-gray-50 cursor-pointer"
+                  value={currentProduct.category}
+                  onChange={(e) => setCurrentProduct({ ...currentProduct, category: e.target.value })}
+                  placeholder="e.g. baby care"
+                />
+                <datalist id="admin-product-categories">
+                  {categoryOptions.map((cat) => (
+                    <option key={cat} value={cat} />
+                  ))}
+                </datalist>
               </div>
 
               <ProductImageSelector

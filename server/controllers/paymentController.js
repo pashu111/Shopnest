@@ -2,7 +2,7 @@ import crypto from "crypto";
 import Order from "../models/Order.js";
 import { getRazorpayInstance, getRazorpayKeyId, requireRazorpayConfig } from "../config/razorpay.js";
 import { clearUserCartData } from "../utils/cartCleanup.js";
-import { validateAndDeductInventory } from "../utils/inventoryUtils.js";
+import { validateInventory, deductInventory } from "../utils/inventoryUtils.js";
 import {
   NEARBY_ORDER_TTL_MINUTES,
   publishNearbyOrderToEligiblePartners,
@@ -147,7 +147,7 @@ export const verifyRazorpayAndCreateOrder = async (req, res) => {
       }
     }
 
-    const inventoryCheck = await validateAndDeductInventory(products);
+    const inventoryCheck = await validateInventory(products);
     if (!inventoryCheck.valid) {
       return res.status(409).json({
         message: "Inventory validation failed",
@@ -198,6 +198,7 @@ export const verifyRazorpayAndCreateOrder = async (req, res) => {
     });
 
     await order.save();
+    await deductInventory(products);
 
     if (userId) {
       await clearUserCartData(userId);

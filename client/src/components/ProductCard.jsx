@@ -91,6 +91,11 @@ const ProductCard = memo(function ProductCard({ product }) {
         <WishlistButton product={product} />
       </div>
 
+      {Number(product.stock) <= 0 && (
+        <span className="absolute top-3 left-3 z-10 bg-slate-900 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-lg">
+          Out of Stock
+        </span>
+      )}
       {product.discount && (
         <span className="absolute top-3 left-3 z-10 bg-gradient-to-r from-rose-600 to-pink-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-lg">
           {product.discount}% OFF
@@ -132,7 +137,15 @@ const ProductCard = memo(function ProductCard({ product }) {
           )}
         </div>
 
-        {existingItem ? (
+        {Number(product.stock) <= 0 ? (
+          <button
+            disabled
+            className="mt-3 w-full flex items-center justify-center gap-2 bg-slate-300 text-slate-500 cursor-not-allowed py-2.5 rounded-xl text-sm font-semibold"
+          >
+            <ShoppingCart size={15} />
+            Out of Stock
+          </button>
+        ) : existingItem ? (
           <div className="mt-3 flex items-center justify-between bg-brand-50 border border-brand-200 rounded-xl px-2 py-1.5">
             <button
               onClick={handleDecrease}

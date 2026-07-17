@@ -2,7 +2,7 @@ import Order from "../models/Order.js";
 import User from "../models/User.js";
 import DeliveryPartner from "../models/DeliveryPartner.js";
 import { clearUserCartData } from "../utils/cartCleanup.js";
-import { validateAndDeductInventory } from "../utils/inventoryUtils.js";
+import { validateInventory, deductInventory } from "../utils/inventoryUtils.js";
 import { sendOrderConfirmation } from "../utils/emailService.js";
 import {
   NEARBY_ORDER_TTL_MINUTES,
@@ -109,7 +109,7 @@ export const createOrder = async (req, res) => {
     }
     const normalizedDeliveryAddress = normalizedDeliveryLocation.fullAddress;
 
-    const inventoryCheck = await validateAndDeductInventory(products);
+    const inventoryCheck = await validateInventory(products);
     if (!inventoryCheck.valid) {
       return res.status(409).json({
         message: "Inventory validation failed",
@@ -134,6 +134,7 @@ export const createOrder = async (req, res) => {
     });
 
     await order.save();
+    await deductInventory(products);
     await clearUserCartData(req.user.id);
 
     // Publish WebSocket event for real-time notification to admin
@@ -204,7 +205,7 @@ export const createGuestOrder = async (req, res) => {
     }
     const normalizedDeliveryAddress = normalizedDeliveryLocation.fullAddress;
 
-    const inventoryCheck = await validateAndDeductInventory(products);
+    const inventoryCheck = await validateInventory(products);
     if (!inventoryCheck.valid) {
       return res.status(409).json({
         message: "Inventory validation failed",
@@ -232,6 +233,7 @@ export const createGuestOrder = async (req, res) => {
     });
 
     await order.save();
+    await deductInventory(products);
 
     const publish = req.app.get("wsPublish");
     if (typeof publish === "function") {

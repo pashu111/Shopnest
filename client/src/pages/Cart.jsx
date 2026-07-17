@@ -43,41 +43,49 @@ const formatMoney = (value) =>
 
 const CartItemRow = memo(function CartItemRow({ item, dispatch }) {
   const productId = item._id || item.id;
+  const isOutOfStock = Number(item.stock) <= 0;
   return (
     <motion.div
       layout
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20, transition: { duration: 0.25 } }}
-      className="bg-surface border border-slate-200 rounded-xl p-4 sm:p-5 shadow-card hover:shadow-card-hover transition-shadow"
+      className={`bg-surface border rounded-xl p-4 sm:p-5 shadow-card hover:shadow-card-hover transition-shadow ${isOutOfStock ? "border-rose-300 bg-rose-50/30" : "border-slate-200"}`}
     >
+      {isOutOfStock && (
+        <div className="mb-3 inline-flex items-center gap-1.5 bg-rose-100 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">
+          Out of Stock — please remove this item
+        </div>
+      )}
       <div className="flex items-center gap-4">
         <CartImage item={item} />
         <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-lg text-slate-900 truncate">{item.name}</h2>
-          <p className="font-extrabold text-slate-900 mt-0.5">{formatMoney(item.price)}</p>
-          <div className="mt-3 inline-flex items-center gap-3 bg-surface-secondary border border-slate-200 rounded-full px-2 py-1">
-            <button
-              type="button"
-              aria-label={`Decrease ${item.name} quantity`}
-              onClick={() => dispatch(decreaseQuantity(productId))}
-              className="w-8 h-8 rounded-full bg-surface border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors"
-            >
-              <Minus size={14} />
-            </button>
-            <span className="font-semibold text-sm w-6 text-center">{item.quantity}</span>
-            <button
-              type="button"
-              aria-label={`Increase ${item.name} quantity`}
-              onClick={() => dispatch(increaseQuantity(productId))}
-              className="w-8 h-8 rounded-full bg-surface border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors"
-            >
-              <Plus size={14} />
-            </button>
-          </div>
+          <h2 className={`font-semibold text-lg truncate ${isOutOfStock ? "text-slate-400" : "text-slate-900"}`}>{item.name}</h2>
+          <p className="font-extrabold mt-0.5">{formatMoney(item.price)}</p>
+          {!isOutOfStock && (
+            <div className="mt-3 inline-flex items-center gap-3 bg-surface-secondary border border-slate-200 rounded-full px-2 py-1">
+              <button
+                type="button"
+                aria-label={`Decrease ${item.name} quantity`}
+                onClick={() => dispatch(decreaseQuantity(productId))}
+                className="w-8 h-8 rounded-full bg-surface border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors"
+              >
+                <Minus size={14} />
+              </button>
+              <span className="font-semibold text-sm w-6 text-center">{item.quantity}</span>
+              <button
+                type="button"
+                aria-label={`Increase ${item.name} quantity`}
+                onClick={() => dispatch(increaseQuantity(productId))}
+                className="w-8 h-8 rounded-full bg-surface border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          )}
         </div>
         <div className="text-right shrink-0">
-          <p className="font-extrabold text-lg text-slate-900">{formatMoney(item.price * item.quantity)}</p>
+          <p className={`font-extrabold text-lg ${isOutOfStock ? "text-slate-400" : "text-slate-900"}`}>{formatMoney(item.price * item.quantity)}</p>
           <button
             type="button"
             onClick={() => dispatch(removeFromCart(productId))}
@@ -252,6 +260,7 @@ export default function Cart() {
   const applyCoupon = () => applyCouponCode(coupon);
   const removeCoupon = () => { setCoupon(""); dispatch(removeCouponRedux()); };
   const total = subtotal - discount + deliveryCharges;
+  const hasOutOfStockItems = (cart || []).some((item) => Number(item.stock) <= 0);
 
   return (
     <div className="min-h-screen bg-surface-secondary">
@@ -342,9 +351,15 @@ export default function Cart() {
                   <span>{formatMoney(total)}</span>
                 </div>
 
+                {hasOutOfStockItems && (
+                  <div className="mt-4 bg-rose-50 border border-rose-200 rounded-lg p-3 text-xs text-rose-700 font-medium">
+                    Remove out-of-stock items to proceed to checkout.
+                  </div>
+                )}
                 <button
                   onClick={() => navigate("/checkout")}
-                  className="w-full mt-6 bg-brand-600 hover:bg-brand-700 text-white py-3 rounded-xl font-semibold shadow-card transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  disabled={hasOutOfStockItems}
+                  className="w-full mt-4 bg-brand-600 hover:bg-brand-700 disabled:bg-brand-300 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold shadow-card transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Proceed to Checkout
                 </button>

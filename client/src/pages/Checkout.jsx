@@ -149,6 +149,7 @@ export default function Checkout() {
   const cart = useSelector((state) => state.cart.items);
   const { user } = useSelector((state) => state.auth);
   const handledPaymentIdsRef = useRef(new Set());
+  const processingRef = useRef(false);
 
   const [formData, setFormData] = useState(() => ({
     ...initialFormData,
@@ -254,7 +255,8 @@ export default function Checkout() {
 
   const proceedToPayment = useCallback(
     async (paymentMethod, isAuthenticated) => {
-      if (isProcessing) return;
+      if (processingRef.current) return;
+      processingRef.current = true;
       setIsProcessing(true);
       const orderPayload = buildOrderPayload(paymentMethod);
       try {
@@ -282,6 +284,7 @@ export default function Checkout() {
               try {
                 const paymentId = response?.razorpay_payment_id;
                 if (paymentId && handledPaymentIdsRef.current.has(paymentId)) {
+                  processingRef.current = false;
                   setIsProcessing(false);
                   return;
                 }
@@ -296,13 +299,18 @@ export default function Checkout() {
                 );
                 await saveLocalOrderAndNavigate(created, paymentMethod);
               } catch (err) {
-                const message = err?.response?.data?.message || err?.message || "Payment could not be processed.";
+                const backendErrors = err?.response?.data?.errors;
+                const message = Array.isArray(backendErrors) && backendErrors.length > 0
+                  ? backendErrors.join(". ")
+                  : err?.response?.data?.message || err?.message || "Payment could not be processed.";
                 Swal.fire({ title: "Payment Failed", text: message, icon: "error", confirmButtonColor: "#059669" });
               }
+              processingRef.current = false;
               setIsProcessing(false);
             },
             modal: {
               ondismiss: () => {
+                processingRef.current = false;
                 setIsProcessing(false);
                 Swal.fire({ title: "Payment Cancelled", text: "You closed the payment window.", icon: "info", confirmButtonColor: "#059669" });
               },
@@ -310,6 +318,7 @@ export default function Checkout() {
           };
           const rzp = new window.Razorpay(options);
           rzp.on("payment.failed", (response) => {
+            processingRef.current = false;
             setIsProcessing(false);
             Swal.fire({ title: "Payment Failed", text: response?.error?.description || "Payment could not be completed.", icon: "error", confirmButtonColor: "#059669" });
           });
@@ -325,14 +334,19 @@ export default function Checkout() {
           await saveLocalOrderAndNavigate(created, paymentMethod);
         }
       } catch (err) {
+        const backendErrors = err?.response?.data?.errors;
+        const specificMessage = Array.isArray(backendErrors) && backendErrors.length > 0
+          ? backendErrors.join(". ")
+          : null;
         const message = err?.code === "OFFLINE"
           ? "You are offline. Please connect to the internet."
-          : err?.response?.data?.message || err?.message || "Could not place your order.";
+          : specificMessage || err?.response?.data?.message || err?.message || "Could not place your order.";
         Swal.fire({ title: paymentMethod === "Razorpay" ? "Payment Failed" : "Order Failed", text: message, icon: "error", confirmButtonColor: "#059669" });
+        processingRef.current = false;
         setIsProcessing(false);
       }
     },
-    [isProcessing, buildOrderPayload, cart, total, dispatch, formData, navigate]
+    [buildOrderPayload, cart, total, dispatch, formData, navigate]
   );
 
   const handlePlaceOrder = async () => {
@@ -353,6 +367,8 @@ export default function Checkout() {
       return;
     }
 
+    if (processingRef.current) return;
+    processingRef.current = true;
     setIsProcessing(true);
 
     const password = Math.random().toString(36).slice(2, 10) + "A1!";
@@ -361,6 +377,7 @@ export default function Checkout() {
       await registerAPI({ name: formData.name, email: formData.email, password, phone: formData.phone });
       const loginResult = await dispatch(loginUser({ email: formData.email, password }));
       if (!loginUser.fulfilled.match(loginResult)) {
+        processingRef.current = false;
         throw new Error(loginResult.payload || "Login failed after registration");
       }
       const localItems = (() => {
@@ -380,10 +397,12 @@ export default function Checkout() {
       const msg = err?.response?.data?.message || "";
       const isDuplicate = msg.toLowerCase().includes("already exists");
       if (isDuplicate) {
+        processingRef.current = false;
         setIsProcessing(false);
         await proceedToPayment(selectedPaymentMethod, false);
         return;
       }
+      processingRef.current = false;
       setIsProcessing(false);
       Swal.fire({ title: "Something went wrong", text: "Please try again.", icon: "error", confirmButtonColor: "#059669" });
     }
